@@ -112,7 +112,7 @@ PERFORMANCE OF THIS SOFTWARE.
         -webkit-overflow-scrolling: touch;
 
         &::-webkit-scrollbar {
-            ${["x"===t?"width":"height"]}: 4px;
+            ${"y"===t?"width":"height"}: 4px;
             padding: 0 2px;
             background: ${e("surface")};
         }
