@@ -544,10 +544,11 @@ return function(e,t,n,r){return new(n||(n=Promise))((function(i,a){function o(e)
 
             code {
                 line-height: 1.5;
+                font-family: ${r.code};
             }
 
             pre {
-                font-family: var(--font-code);
+                font-family: ${r.code};
                 margin: 0 1.2rem !important;
                 overflow-x: scroll;
                 white-space: pre !important;
