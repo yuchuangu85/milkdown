@@ -1,1 +1,132 @@
-export default"# Writing Custom Plugins\n\nInstead of using provided utils to create plugin, you can also write plugin yourself.\nYou will get more access to the plugin detail in this way. And this could help you to write yourself a powerful plugin.\n\n## Structure Overview\n\nGenerally speaking, a plugin will have following structure:\n\n```typescript\nimport { MilkdownPlugin } from '@milkdown/core';\n\nconst myPlugin: MilkdownPlugin = (pre) => {\n    // #1 prepare plugin\n    return async (ctx) => {\n        // #2 run plugin\n    };\n};\n```\n\nEach plugin has two parts:\n\n1. _Prepare_: this part will be executed when plugin is registered in milkdown by `.use` method.\n2. _Run_: this part will be executed when plugin is actually loaded.\n\n## Timer\n\nTimer can be used to decide when to load the current plugin and how current plugin can influence other plugin's load.\n\nYou can use `ctx.wait` to wait a timer finish.\n\n```typescript\nimport { MilkdownPlugin, Complete } from '@milkdown/core';\n\nconst myPlugin: MilkdownPlugin = () => {\n    return async (ctx) => {\n        const start = Date.now();\n\n        await ctx.wait(Complete);\n\n        const end = Date.now();\n\n        console.log('Milkdown load duration: ', end - start);\n    };\n};\n```\n\nYou can also create your own timer and influence other plugin's load time.\nFor example, let's create a plugin that will fetch markdown content from remote server as editor's default value.\n\n```typescript\nimport { MilkdownPlugin, editorStateTimerCtx, defaultValueCtx, createTimer } from '@milkdown/core';\n\nconst RemoteTimer = createTimer('RemoteTimer');\n\nconst remotePlugin: MilkdownPlugin = (pre) => {\n    pre.record(RemoteTimer);\n\n    return async (ctx) => {\n        ctx.update(editorStateTimerCtx, (timers) => timers.concat(RemoteTimer));\n\n        const defaultMarkdown = await fetchMarkdownAPI();\n        ctx.set(defaultValueCtx, defaultMarkdown);\n\n        ctx.done(RemoteTimer);\n    };\n};\n```\n\nIt has following steps:\n\n1. We use `createTimer` to create a timer, and use `pre.record` to register it into milkdown.\n2. We update `editorStateTimerCtx` to tell the internal `editorState` plugin that before initialize editor state, it should wait our remote fetch process finished.\n3. After we get value from `fetchMarkdownAPI`, we set it as `defaultValue` and use `ctx.done` to mark a timer as complete.\n\n## Ctx\n\nWe have used `ctx` several times in the above example, now we can try to understand what it is.\nCtx is a piece of data that can be shared in the entire editor instance.\n\n```typescript\nimport { MilkdownPlugin, createSlice } from '@milkdown/core';\n\nconst counterCtx = createSlice(0);\n\nconst counterPlugin: MilkdownPlugin = (pre) => {\n    pre.inject(counterCtx);\n\n    return (ctx) => {\n        // count is 0\n        const count0 = ctx.get(counterCtx);\n\n        // set count to 1\n        ctx.get(counterCtx, 1);\n\n        // now count is 1\n        const count1 = ctx.get(counterCtx);\n\n        // set count to n + 2\n        ctx.update(counterCtx, (prev) => prev + 2);\n\n        // now count is 3\n        const count2 = ctx.get(counterCtx);\n    };\n};\n```\n\nWe can use `createSlice` to create a ctx, and use `pre.inject` to inject the ctx into the editor.\n\nAnd when plugin processing, `ctx.get` can get the value of a ctx, `ctx.set` can set the value of a ctx, and `ctx.update` can update a ctx using callback function.\n\nSo, we can use `ctx` combine with `timer` to decide when should a plugin be processed.\n\n```typescript\nimport { MilkdownPlugin, SchemaReady, Timer, createSlice } from '@milkdown/core';\n\nconst examplePluginTimersCtx = createSlice<Timer[]>([]);\n\nconst examplePlugin: MilkdownPlugin = (pre) => {\n    pre.inject(counterCtx, [SchemaReady]);\n    return async (ctx) => {\n        await Promise.all(ctx.get(examplePluginTimersCtx).map((timer) => ctx.wait(timer)));\n        // or we can use a simplified syntax sugar\n        await ctx.waitTimers(examplePluginTimersCtx);\n\n        // do something\n    };\n};\n```\n\nWith this pattern, if other plugins want to delay the process of `examplePlugin`, all they need to do is just add a timer into `examplePluginTimersCtx` with `ctx.update`.\n";
+var e=`# Writing Custom Plugins
+
+Instead of using provided utils to create plugin, you can also write plugin yourself.
+You will get more access to the plugin detail in this way. And this could help you to write yourself a powerful plugin.
+
+## Structure Overview
+
+Generally speaking, a plugin will have following structure:
+
+\`\`\`typescript
+import { MilkdownPlugin } from '@milkdown/core';
+
+const myPlugin: MilkdownPlugin = (pre) => {
+    // #1 prepare plugin
+    return async (ctx) => {
+        // #2 run plugin
+    };
+};
+\`\`\`
+
+Each plugin has two parts:
+
+1. _Prepare_: this part will be executed when plugin is registered in milkdown by \`.use\` method.
+2. _Run_: this part will be executed when plugin is actually loaded.
+
+## Timer
+
+Timer can be used to decide when to load the current plugin and how current plugin can influence other plugin's load.
+
+You can use \`ctx.wait\` to wait a timer finish.
+
+\`\`\`typescript
+import { MilkdownPlugin, Complete } from '@milkdown/core';
+
+const myPlugin: MilkdownPlugin = () => {
+    return async (ctx) => {
+        const start = Date.now();
+
+        await ctx.wait(Complete);
+
+        const end = Date.now();
+
+        console.log('Milkdown load duration: ', end - start);
+    };
+};
+\`\`\`
+
+You can also create your own timer and influence other plugin's load time.
+For example, let's create a plugin that will fetch markdown content from remote server as editor's default value.
+
+\`\`\`typescript
+import { MilkdownPlugin, editorStateTimerCtx, defaultValueCtx, createTimer } from '@milkdown/core';
+
+const RemoteTimer = createTimer('RemoteTimer');
+
+const remotePlugin: MilkdownPlugin = (pre) => {
+    pre.record(RemoteTimer);
+
+    return async (ctx) => {
+        ctx.update(editorStateTimerCtx, (timers) => timers.concat(RemoteTimer));
+
+        const defaultMarkdown = await fetchMarkdownAPI();
+        ctx.set(defaultValueCtx, defaultMarkdown);
+
+        ctx.done(RemoteTimer);
+    };
+};
+\`\`\`
+
+It has following steps:
+
+1. We use \`createTimer\` to create a timer, and use \`pre.record\` to register it into milkdown.
+2. We update \`editorStateTimerCtx\` to tell the internal \`editorState\` plugin that before initialize editor state, it should wait our remote fetch process finished.
+3. After we get value from \`fetchMarkdownAPI\`, we set it as \`defaultValue\` and use \`ctx.done\` to mark a timer as complete.
+
+## Ctx
+
+We have used \`ctx\` several times in the above example, now we can try to understand what it is.
+Ctx is a piece of data that can be shared in the entire editor instance.
+
+\`\`\`typescript
+import { MilkdownPlugin, createSlice } from '@milkdown/core';
+
+const counterCtx = createSlice(0);
+
+const counterPlugin: MilkdownPlugin = (pre) => {
+    pre.inject(counterCtx);
+
+    return (ctx) => {
+        // count is 0
+        const count0 = ctx.get(counterCtx);
+
+        // set count to 1
+        ctx.get(counterCtx, 1);
+
+        // now count is 1
+        const count1 = ctx.get(counterCtx);
+
+        // set count to n + 2
+        ctx.update(counterCtx, (prev) => prev + 2);
+
+        // now count is 3
+        const count2 = ctx.get(counterCtx);
+    };
+};
+\`\`\`
+
+We can use \`createSlice\` to create a ctx, and use \`pre.inject\` to inject the ctx into the editor.
+
+And when plugin processing, \`ctx.get\` can get the value of a ctx, \`ctx.set\` can set the value of a ctx, and \`ctx.update\` can update a ctx using callback function.
+
+So, we can use \`ctx\` combine with \`timer\` to decide when should a plugin be processed.
+
+\`\`\`typescript
+import { MilkdownPlugin, SchemaReady, Timer, createSlice } from '@milkdown/core';
+
+const examplePluginTimersCtx = createSlice<Timer[]>([]);
+
+const examplePlugin: MilkdownPlugin = (pre) => {
+    pre.inject(counterCtx, [SchemaReady]);
+    return async (ctx) => {
+        await Promise.all(ctx.get(examplePluginTimersCtx).map((timer) => ctx.wait(timer)));
+        // or we can use a simplified syntax sugar
+        await ctx.waitTimers(examplePluginTimersCtx);
+
+        // do something
+    };
+};
+\`\`\`
+
+With this pattern, if other plugins want to delay the process of \`examplePlugin\`, all they need to do is just add a timer into \`examplePluginTimersCtx\` with \`ctx.update\`.
+`;export{e as default};

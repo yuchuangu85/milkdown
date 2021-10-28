@@ -1,1 +1,102 @@
-export default"# Design System\n\nDesign system is the foundation of themes.\n\n```mermaid\ngraph TD;\n\ttheme{{Theme}};\n\tsystem((Design System));\n\n    theme --\x3e system;\n    system --\x3e Node;\n    system --\x3e Mark;\n    system --\x3e Plugin;\n```\n\nDesign system is something like a contract.\nTheme implements design system, and design system can be consumed by different nodes, marks and plugins.\n\nIn [writing theme plugins](/#/writing-theme-plugins) section, we learnt how to define a theme. And this section will show how to use it.\n\n## Theme Tool\n\nDesign system should be used by access to `themeToolCtx`.\n\n```typescript\nimport { themeToolCtx } from '@milkdown/core';\n\nimport { createProsePlugin } from '@milkdown/utils';\n\nexport const myProsemirrorPlugin = createProsePlugin((_, utils) => {\n    const themeTool = utils.ctx.get(themeToolCtx);\n\n    // ...\n});\n```\n\n### font\n\n```typescript\nconst { typography, code } = themeTool.font;\n\ncss`\n    p {\n        font-family: ${typography};\n    }\n\n    code {\n        font-family: ${code};\n    }\n`;\n```\n\n### size\n\n```typescript\nconst { radius, lineWidth } = themeTool.size;\n\ncss`\n    border-radius: ${radius}px;\n    border: ${lineWidth}px solid #000;\n`;\n```\n\n### palette\n\nPalette can be used to generate color based on current theme.\n\n```typescript\nconst { palette } = themeTool;\n\ncss`\n    background: ${palette('background')};\n    // 0.8 means it has 0.8 opacity.\n    color: ${palette('primary', 0.8)};\n`;\n```\n\n### mixin\n\n```typescript\nconst { scrollbar, shadow, border } = themeTool.mixin;\n\ncss`\n    ul {\n        ${scrollbar()};\n    }\n    div {\n        ${shadow()};\n        ${border()};\n    }\n`;\n```\n\n### slots\n\n```typescript\nconst { icon } = themeTool.slots;\n\nconst loadingIcon = icon('loading');\ndiv.appendChild(loadingIcon);\n```\n";
+var n=`# Design System
+
+Design system is the foundation of themes.
+
+\`\`\`mermaid
+graph TD;
+	theme{{Theme}};
+	system((Design System));
+
+    theme --> system;
+    system --> Node;
+    system --> Mark;
+    system --> Plugin;
+\`\`\`
+
+Design system is something like a contract.
+Theme implements design system, and design system can be consumed by different nodes, marks and plugins.
+
+In [writing theme plugins](/#/writing-theme-plugins) section, we learnt how to define a theme. And this section will show how to use it.
+
+## Theme Tool
+
+Design system should be used by access to \`themeToolCtx\`.
+
+\`\`\`typescript
+import { themeToolCtx } from '@milkdown/core';
+
+import { createProsePlugin } from '@milkdown/utils';
+
+export const myProsemirrorPlugin = createProsePlugin((_, utils) => {
+    const themeTool = utils.ctx.get(themeToolCtx);
+
+    // ...
+});
+\`\`\`
+
+### font
+
+\`\`\`typescript
+const { typography, code } = themeTool.font;
+
+css\`
+    p {
+        font-family: \${typography};
+    }
+
+    code {
+        font-family: \${code};
+    }
+\`;
+\`\`\`
+
+### size
+
+\`\`\`typescript
+const { radius, lineWidth } = themeTool.size;
+
+css\`
+    border-radius: \${radius}px;
+    border: \${lineWidth}px solid #000;
+\`;
+\`\`\`
+
+### palette
+
+Palette can be used to generate color based on current theme.
+
+\`\`\`typescript
+const { palette } = themeTool;
+
+css\`
+    background: \${palette('background')};
+    // 0.8 means it has 0.8 opacity.
+    color: \${palette('primary', 0.8)};
+\`;
+\`\`\`
+
+### mixin
+
+\`\`\`typescript
+const { scrollbar, shadow, border } = themeTool.mixin;
+
+css\`
+    ul {
+        \${scrollbar()};
+    }
+    div {
+        \${shadow()};
+        \${border()};
+    }
+\`;
+\`\`\`
+
+### slots
+
+\`\`\`typescript
+const { icon } = themeTool.slots;
+
+const loadingIcon = icon('loading');
+div.appendChild(loadingIcon);
+\`\`\`
+`;export{n as default};

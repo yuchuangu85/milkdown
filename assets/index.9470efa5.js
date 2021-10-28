@@ -1,1 +1,45 @@
-export default"# Svelte\n\nWe don't provide Svelte support out of box, but you can use the vanilla version with it easily.\n\n## Install the Dependencies\n\n```bash\n# install with npm\nnpm install @milkdown/core @milkdown/preset-commonmark @milkdown/theme-nord\n```\n\n## Create a Component\n\nCreate a component is pretty easy.\n\n```html\n<script>\n    import { onMount } from 'svelte';\n    import { Editor, rootCtx, defaultValueCtx } from '@milkdown/core';\n    import { commonmark } from '@milkdown/preset-commonmark';\n    import { nord } from '@milkdown/theme-nord';\n\n    export let defaultValue;\n\n    function editor(dom) {\n        Editor.make()\n            .config((ctx) => {\n                ctx.set(rootCtx, dom);\n                ctx.set(defaultValueCtx, defaultValue);\n            })\n            .use(nord)\n            .use(commonmark)\n            .create();\n    }\n<\/script>\n\n<style></style>\n\n<div use:editor />\n```\n\n### Online Demo\n\n!CodeSandBox{milkdown-svelte-setup-5we3g?fontsize=14&hidenavigation=1&theme=dark&view=preview}\n";
+var n=`# Svelte
+
+We don't provide Svelte support out of box, but you can use the vanilla version with it easily.
+
+## Install the Dependencies
+
+\`\`\`bash
+# install with npm
+npm install @milkdown/core @milkdown/preset-commonmark @milkdown/theme-nord
+\`\`\`
+
+## Create a Component
+
+Create a component is pretty easy.
+
+\`\`\`html
+<script>
+    import { onMount } from 'svelte';
+    import { Editor, rootCtx, defaultValueCtx } from '@milkdown/core';
+    import { commonmark } from '@milkdown/preset-commonmark';
+    import { nord } from '@milkdown/theme-nord';
+
+    export let defaultValue;
+
+    function editor(dom) {
+        Editor.make()
+            .config((ctx) => {
+                ctx.set(rootCtx, dom);
+                ctx.set(defaultValueCtx, defaultValue);
+            })
+            .use(nord)
+            .use(commonmark)
+            .create();
+    }
+<\/script>
+
+<style></style>
+
+<div use:editor />
+\`\`\`
+
+### Online Demo
+
+!CodeSandBox{milkdown-svelte-setup-5we3g?fontsize=14&hidenavigation=1&theme=dark&view=preview}
+`;export{n as default};

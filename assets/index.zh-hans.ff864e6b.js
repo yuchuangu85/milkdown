@@ -1,1 +1,22 @@
-export default"# Prose\n\n[Prosemirror](https://prosemirror.net/)需要它的核心模块的版本保持一致。\n\n所以[@milkdown/prose](https://www.npmjs.com/package/@milkdown/prose)这个包用来将它的核心模块打包在一起。\n\n包括的模块有：\n\n-   [prosemirror-model](https://www.npmjs.com/package/prosemirror-model)\n-   [prosemirror-state](https://www.npmjs.com/package/prosemirror-state)\n-   [prosemirror-view](https://www.npmjs.com/package/prosemirror-view)\n-   [prosemirror-transform](https://www.npmjs.com/package/prosemirror-transform)\n-   [prosemirror-commands](https://www.npmjs.com/package/prosemirror-commands)\n-   [prosemirror-inputrules](https://www.npmjs.com/package/prosemirror-inputrules)\n-   [prosemirror-keymap](https://www.npmjs.com/package/prosemirror-keymap)\n\n用户可以通过`@milkdown/prose`来访问它们的 API，例如：\n\n```typescript\nimport { EditorState, Node, Mark, Selection } from '@milkdown/prose';\n```\n";
+var r=`# Prose
+
+[Prosemirror](https://prosemirror.net/)\u9700\u8981\u5B83\u7684\u6838\u5FC3\u6A21\u5757\u7684\u7248\u672C\u4FDD\u6301\u4E00\u81F4\u3002
+
+\u6240\u4EE5[@milkdown/prose](https://www.npmjs.com/package/@milkdown/prose)\u8FD9\u4E2A\u5305\u7528\u6765\u5C06\u5B83\u7684\u6838\u5FC3\u6A21\u5757\u6253\u5305\u5728\u4E00\u8D77\u3002
+
+\u5305\u62EC\u7684\u6A21\u5757\u6709\uFF1A
+
+-   [prosemirror-model](https://www.npmjs.com/package/prosemirror-model)
+-   [prosemirror-state](https://www.npmjs.com/package/prosemirror-state)
+-   [prosemirror-view](https://www.npmjs.com/package/prosemirror-view)
+-   [prosemirror-transform](https://www.npmjs.com/package/prosemirror-transform)
+-   [prosemirror-commands](https://www.npmjs.com/package/prosemirror-commands)
+-   [prosemirror-inputrules](https://www.npmjs.com/package/prosemirror-inputrules)
+-   [prosemirror-keymap](https://www.npmjs.com/package/prosemirror-keymap)
+
+\u7528\u6237\u53EF\u4EE5\u901A\u8FC7\`@milkdown/prose\`\u6765\u8BBF\u95EE\u5B83\u4EEC\u7684 API\uFF0C\u4F8B\u5982\uFF1A
+
+\`\`\`typescript
+import { EditorState, Node, Mark, Selection } from '@milkdown/prose';
+\`\`\`
+`;export{r as default};

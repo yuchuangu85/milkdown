@@ -1,1 +1,115 @@
-export default"# React\n\nWe provide react support out of box.\n\n## Install the Dependencies\n\nExcept the `@milkdown/core`, preset and theme. We need to install the `@milkdown/react`, which provide lots of abilities for react in milkdown.\n\n```bash\n# install with npm\nnpm install @milkdown/react @milkdown/core\n\n# optional\nnpm install @milkdown/preset-commonmark @milkdown/theme-nord\n```\n\n## Create a Component\n\nCreate a component is pretty easy.\n\n```typescript\nimport React from 'react';\nimport { Editor, rootCtx } from '@milkdown/core';\nimport { nord } from '@milkdown/theme-nord';\nimport { ReactEditor, useEditor } from '@milkdown/react';\nimport { commonmark } from '@milkdown/preset-commonmark';\n\nexport const MilkdownEditor: React.FC = () => {\n    const editor = useEditor((root) =>\n        Editor.make()\n            .config((ctx) => {\n                ctx.set(rootCtx, root);\n            })\n            .use(nord)\n            .use(commonmark),\n    );\n\n    return <ReactEditor editor={editor} />;\n};\n```\n\n### Online Demo\n\n!CodeSandBox{milkdown-react-setup-ngkiq?fontsize=14&hidenavigation=1&theme=dark&view=preview}\n\n---\n\n## Custom Component for Node\n\nWe provide support of custom component for node out of box.\n\n```typescript\nimport React from 'react';\nimport { Editor, rootCtx } from '@milkdown/core';\nimport { ReactEditor, useEditor, useNodeCtx } from '@milkdown/react';\nimport { commonmark, paragraph, image } from '@milkdown/preset-commonmark';\n\nconst CustomParagraph: React.FC = ({ children }) => <div className=\"react-paragraph\">{children}</div>;\n\nconst CustomImage: React.FC = ({ children }) => {\n    const { node } = useNodeCtx();\n\n    return (\n        <img\n            className=\"react-image\"\n            src={node.attrs.src}\n            alt={node.attrs.alt}\n            title={node.attrs.title}\n        />;\n    )\n};\n\nexport const MilkdownEditor: React.FC = () => {\n    const editor = useEditor((root, renderReact) => {\n        const nodes = commonmark\n            .configure(paragraph, { view: renderReact(CustomParagraph) })\n            .configure(image, { view: renderReact(CustomImage) });\n\n        return Editor.make()\n            .config((ctx) => {\n                ctx.set(rootCtx, root);\n            })\n            .use(nodes);\n    });\n\n    return <ReactEditor editor={editor} />;\n};\n```\n\nValues can be get by `useNodeCtx`:\n\n-   _editor_:\n\n    Instance of current milkdown editor.\n\n-   _node_:\n\n    Current prosemirror node need to be rendered.\n    Equal to [node parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).\n\n-   _view_:\n\n    Current prosemirror editor view.\n    Equal to [view parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).\n\n-   _getPos_:\n\n    Method or property to get position of current prosemirror node.\n    Equal to [getPos parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).\n\n-   _decorations_:\n\n    Decorations of current prosemirror node.\n    Equal to [decorations parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).\n";
+var n=`# React
+
+We provide react support out of box.
+
+## Install the Dependencies
+
+Except the \`@milkdown/core\`, preset and theme. We need to install the \`@milkdown/react\`, which provide lots of abilities for react in milkdown.
+
+\`\`\`bash
+# install with npm
+npm install @milkdown/react @milkdown/core
+
+# optional
+npm install @milkdown/preset-commonmark @milkdown/theme-nord
+\`\`\`
+
+## Create a Component
+
+Create a component is pretty easy.
+
+\`\`\`typescript
+import React from 'react';
+import { Editor, rootCtx } from '@milkdown/core';
+import { nord } from '@milkdown/theme-nord';
+import { ReactEditor, useEditor } from '@milkdown/react';
+import { commonmark } from '@milkdown/preset-commonmark';
+
+export const MilkdownEditor: React.FC = () => {
+    const editor = useEditor((root) =>
+        Editor.make()
+            .config((ctx) => {
+                ctx.set(rootCtx, root);
+            })
+            .use(nord)
+            .use(commonmark),
+    );
+
+    return <ReactEditor editor={editor} />;
+};
+\`\`\`
+
+### Online Demo
+
+!CodeSandBox{milkdown-react-setup-ngkiq?fontsize=14&hidenavigation=1&theme=dark&view=preview}
+
+---
+
+## Custom Component for Node
+
+We provide support of custom component for node out of box.
+
+\`\`\`typescript
+import React from 'react';
+import { Editor, rootCtx } from '@milkdown/core';
+import { ReactEditor, useEditor, useNodeCtx } from '@milkdown/react';
+import { commonmark, paragraph, image } from '@milkdown/preset-commonmark';
+
+const CustomParagraph: React.FC = ({ children }) => <div className="react-paragraph">{children}</div>;
+
+const CustomImage: React.FC = ({ children }) => {
+    const { node } = useNodeCtx();
+
+    return (
+        <img
+            className="react-image"
+            src={node.attrs.src}
+            alt={node.attrs.alt}
+            title={node.attrs.title}
+        />;
+    )
+};
+
+export const MilkdownEditor: React.FC = () => {
+    const editor = useEditor((root, renderReact) => {
+        const nodes = commonmark
+            .configure(paragraph, { view: renderReact(CustomParagraph) })
+            .configure(image, { view: renderReact(CustomImage) });
+
+        return Editor.make()
+            .config((ctx) => {
+                ctx.set(rootCtx, root);
+            })
+            .use(nodes);
+    });
+
+    return <ReactEditor editor={editor} />;
+};
+\`\`\`
+
+Values can be get by \`useNodeCtx\`:
+
+-   _editor_:
+
+    Instance of current milkdown editor.
+
+-   _node_:
+
+    Current prosemirror node need to be rendered.
+    Equal to [node parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+
+-   _view_:
+
+    Current prosemirror editor view.
+    Equal to [view parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+
+-   _getPos_:
+
+    Method or property to get position of current prosemirror node.
+    Equal to [getPos parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+
+-   _decorations_:
+
+    Decorations of current prosemirror node.
+    Equal to [decorations parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+`;export{n as default};

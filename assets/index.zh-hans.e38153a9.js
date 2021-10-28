@@ -1,1 +1,263 @@
-export default"# 使用工具包\n\n我们提供了一个[工具包](https://www.npmjs.com/package/@milkdown/utils)来为编写插件提供更多的能力和便利。\n\n# 工厂函数\n\n工具包提供了三个工厂函数：\n\n-   _createProsePlugin_:\n    创建[prosemirror plugin](https://prosemirror.net/docs/ref/#state.Plugin_System).\n-   _createNode_:\n    创建[prosemirror node](https://prosemirror.net/docs/ref/#model.Node).\n-   _createMark_:\n    创建[prosemirror mark](https://prosemirror.net/docs/ref/#model.Mark).\n\n## 选项\n\n有时你可能希望插件可以通过不同的选项来配置。\n通过工具包中提供的工厂函数，你可以轻松实现它：\n\n```typescript\nimport { createProsePlugin } from '@milkdown/utils';\nimport { Plugin } from '@milkdown/prose';\n\ntype Options = {\n    color: string;\n};\n\nexport const myProsemirrorPlugin = createProsePlugin<Options>((options) => {\n    // 所有的选项都需要默认值\n    const color = options?.color ?? '#fff';\n\n    return new Plugin({\n        // ...定义你的插件\n    });\n});\n\n// 使用：\n// 默认\nEditor.use(myProsemirrorPlugin());\n\n// 自定义配置\nEditor.use(myProsemirrorPlugin({ color: '#000' }));\n```\n\n## 工具\n\n我们提供了一些工具来让实现功能更加轻松。\n\n### getStyle\n\n通过`getStyle`函数，你可以：\n\n-   通过[themeTool](/#/zh-hans/design-system)访问设计系统。\n-   让你的样式自动适配**无头模式**。\n\n```typescript\nimport { createProsePlugin } from '@milkdown/utils';\nimport { Plugin } from '@milkdown/prose';\nimport { css } from '@emotion/css';\n\ntype Options = {\n    color: string;\n};\n\nexport const myProsemirrorPlugin = createProsePlugin((_, utils) => {\n    const className = utils.getStyle((themeTool) => {\n        const primaryColor = themeTool.palette('primary');\n        const { shadow } = themeTool.mixin;\n\n        return css`\n            ${shadow};\n            color: ${primaryColor};\n        `;\n    });\n\n    return new Plugin({\n        // ...定义你的插件\n    });\n});\n\n// 无头模式：\n// 在无头模式中，通过`getStyle`创建的样式都会被消除。\nEditor.use(myProsemirrorPlugin({ headless: true }));\n```\n\n### getClassName\n\n`getClassName`函数是一个让用户更容易创建 class name 的快捷方式。\n\n```typescript\nimport { createNode } from '@milkdown/utils';\n\nexport const myNode = createNode<Keys>((options, utils) => {\n    const id = 'myNode';\n    const style = 'my-class-name';\n\n    return {\n        id,\n        schema: {\n            content: 'inline*',\n            group: 'block',\n            parseDOM: [{ tag: 'div' }],\n            toDOM: (node) => ['div', { class: utils.getClassName(node.attrs, id, style) }, 0],\n        },\n        // ...other props\n    };\n});\n```\n\n在上述例子中，默认情况下，生成的 block 是一个`div`元素，它拥有类名：`myNode my-class-name`。\n用户也可以通过配置自定义类名：\n\n```typescript\nEditor.use(\n    myNode({\n        className: (attrs) => ['my-custom-node-className', attrs.disabled && 'disabled'],\n    }),\n);\n```\n\n### ctx\n\n你也可以访问编辑器的*ctx*。\n\n```typescript\nimport { rootCtx } from '@milkdown/core';\nimport { createProsePlugin } from '@milkdown/utils';\n\nexport const myProsemirrorPlugin = createProsePlugin((_, utils) => {\n    const { ctx } = utils;\n    const getRootElement = () => ctx.get(rootCtx);\n\n    return new Plugin({\n        // ...define your plugin\n        // Get root element\n        const rootElement = getRootElement();\n    });\n});\n```\n\n## 命令和快捷键\n\n在**node 和 mark**中，定义命令和快捷键会更加简单。\n\n例如在标题节点中：\n\n```typescript\nimport { createCmd, createCmdKey } from '@milkdown/core';\nimport { createNode, createShortcut } from '@milkdown/utils';\nimport { setBlockType } from '@milkdown/prose';\n\ntype Keys = 'H1' | 'H2' | 'H3';\n\nexport const TurnIntoHeading = createCmdKey<number>();\nexport const heading = createNode<Keys>((_, utils) => {\n    const id = 'heading';\n\n    return {\n        id,\n        schema: {\n            content: 'inline*',\n            group: 'block',\n            attrs: {\n                level: {\n                    default: 1,\n                },\n            },\n            parseDOM: [1, 2, 3].map((x) => ({ tag: `h${x}`, attrs: { level: x } })),\n            toDOM: (node) => [`h${node.attrs.level}`, 0],\n        },\n        // ...some other props\n\n        // 实现命令\n        commands: (nodeType) => [createCmd(TurnIntoHeading, (level = 1) => setBlockType(nodeType, { level }))],\n\n        // 将命令映射到快捷键\n        shortcuts: {\n            [SupportedKeys.H1]: createShortcut(TurnIntoHeading, 'Mod-Alt-1', 1),\n            [SupportedKeys.H2]: createShortcut(TurnIntoHeading, 'Mod-Alt-2', 2),\n            [SupportedKeys.H3]: createShortcut(TurnIntoHeading, 'Mod-Alt-3', 3),\n        },\n    };\n});\n```\n\n在这个例子中，我们使用`createCmdKey`来注册命令，然后使用`createCmd`来实现它。\n类型变量中的`number`意味着这个命令被调用时可以接受`number`类型的参数。\n然后，我们可以使用这个命令来创建快捷键。\n\n通过这个模式，我们也提供了自定义快捷键的能力。\n\n```typescript\nEditor.use(\n    heading({\n        keymap: {\n            H1: 'Mod-shift-1',\n            H2: 'Mod-shift-2',\n            H3: 'Mod-shift-3',\n        },\n    }),\n);\n```\n\n你可能注意到了定义的`Keys`类型，它用于告诉 typescript 支持的快捷键。\n如果用户试图自定义超出范围的快捷键，typescript 会告诉他们：\n\n```typescript\nEditor.use(\n    heading({\n        keymap: {\n            // typescript编译时会报错\n            H4: 'Mod-shift-4',\n        },\n    }),\n);\n```\n\n# AtomList\n\n在真实世界中，一个包经常由一系列 milkdown 插件组成。\n`AtomList`可以帮助用户更简单的使用和配置插件列表。\n\n```typescript\nimport { createNode, AtomList } from '@milkdown/utils';\nconst node1 = createNode(/* node1 */);\nconst node2 = createNode(/* node2 */);\nconst node3 = createNode(/* node3 */);\n\nconst mySyntaxPlugin = AtomList.create([node1(), node2(), node3()]);\n\nEditor.use(mySyntaxPlugin);\n\n// 配置插件：\nEditor.use(\n    mySyntaxPlugin.configure(node1, {\n        keymap: {\n            //...\n        },\n    }),\n);\n// 等同于：\nEditor.use([\n    node1({\n        keymap: {\n            //...\n        },\n    }),\n    node2(),\n    node3(),\n]);\n\n// 为所有插件开启无头模式：\nEditor.use(mySyntaxPlugin.headless());\n\n// 移除一个插件：\nEditor.use(mySyntaxPlugin.remove(node1));\n\n// 替换一个插件：\nconst myNode1 = createNode(/* ... */);\nEditor.use(mySyntaxPlugin.replace(node1, myNode1));\n```\n";
+var n=`# \u4F7F\u7528\u5DE5\u5177\u5305
+
+\u6211\u4EEC\u63D0\u4F9B\u4E86\u4E00\u4E2A[\u5DE5\u5177\u5305](https://www.npmjs.com/package/@milkdown/utils)\u6765\u4E3A\u7F16\u5199\u63D2\u4EF6\u63D0\u4F9B\u66F4\u591A\u7684\u80FD\u529B\u548C\u4FBF\u5229\u3002
+
+# \u5DE5\u5382\u51FD\u6570
+
+\u5DE5\u5177\u5305\u63D0\u4F9B\u4E86\u4E09\u4E2A\u5DE5\u5382\u51FD\u6570\uFF1A
+
+-   _createProsePlugin_:
+    \u521B\u5EFA[prosemirror plugin](https://prosemirror.net/docs/ref/#state.Plugin_System).
+-   _createNode_:
+    \u521B\u5EFA[prosemirror node](https://prosemirror.net/docs/ref/#model.Node).
+-   _createMark_:
+    \u521B\u5EFA[prosemirror mark](https://prosemirror.net/docs/ref/#model.Mark).
+
+## \u9009\u9879
+
+\u6709\u65F6\u4F60\u53EF\u80FD\u5E0C\u671B\u63D2\u4EF6\u53EF\u4EE5\u901A\u8FC7\u4E0D\u540C\u7684\u9009\u9879\u6765\u914D\u7F6E\u3002
+\u901A\u8FC7\u5DE5\u5177\u5305\u4E2D\u63D0\u4F9B\u7684\u5DE5\u5382\u51FD\u6570\uFF0C\u4F60\u53EF\u4EE5\u8F7B\u677E\u5B9E\u73B0\u5B83\uFF1A
+
+\`\`\`typescript
+import { createProsePlugin } from '@milkdown/utils';
+import { Plugin } from '@milkdown/prose';
+
+type Options = {
+    color: string;
+};
+
+export const myProsemirrorPlugin = createProsePlugin<Options>((options) => {
+    // \u6240\u6709\u7684\u9009\u9879\u90FD\u9700\u8981\u9ED8\u8BA4\u503C
+    const color = options?.color ?? '#fff';
+
+    return new Plugin({
+        // ...\u5B9A\u4E49\u4F60\u7684\u63D2\u4EF6
+    });
+});
+
+// \u4F7F\u7528\uFF1A
+// \u9ED8\u8BA4
+Editor.use(myProsemirrorPlugin());
+
+// \u81EA\u5B9A\u4E49\u914D\u7F6E
+Editor.use(myProsemirrorPlugin({ color: '#000' }));
+\`\`\`
+
+## \u5DE5\u5177
+
+\u6211\u4EEC\u63D0\u4F9B\u4E86\u4E00\u4E9B\u5DE5\u5177\u6765\u8BA9\u5B9E\u73B0\u529F\u80FD\u66F4\u52A0\u8F7B\u677E\u3002
+
+### getStyle
+
+\u901A\u8FC7\`getStyle\`\u51FD\u6570\uFF0C\u4F60\u53EF\u4EE5\uFF1A
+
+-   \u901A\u8FC7[themeTool](/#/zh-hans/design-system)\u8BBF\u95EE\u8BBE\u8BA1\u7CFB\u7EDF\u3002
+-   \u8BA9\u4F60\u7684\u6837\u5F0F\u81EA\u52A8\u9002\u914D**\u65E0\u5934\u6A21\u5F0F**\u3002
+
+\`\`\`typescript
+import { createProsePlugin } from '@milkdown/utils';
+import { Plugin } from '@milkdown/prose';
+import { css } from '@emotion/css';
+
+type Options = {
+    color: string;
+};
+
+export const myProsemirrorPlugin = createProsePlugin((_, utils) => {
+    const className = utils.getStyle((themeTool) => {
+        const primaryColor = themeTool.palette('primary');
+        const { shadow } = themeTool.mixin;
+
+        return css\`
+            \${shadow};
+            color: \${primaryColor};
+        \`;
+    });
+
+    return new Plugin({
+        // ...\u5B9A\u4E49\u4F60\u7684\u63D2\u4EF6
+    });
+});
+
+// \u65E0\u5934\u6A21\u5F0F\uFF1A
+// \u5728\u65E0\u5934\u6A21\u5F0F\u4E2D\uFF0C\u901A\u8FC7\`getStyle\`\u521B\u5EFA\u7684\u6837\u5F0F\u90FD\u4F1A\u88AB\u6D88\u9664\u3002
+Editor.use(myProsemirrorPlugin({ headless: true }));
+\`\`\`
+
+### getClassName
+
+\`getClassName\`\u51FD\u6570\u662F\u4E00\u4E2A\u8BA9\u7528\u6237\u66F4\u5BB9\u6613\u521B\u5EFA class name \u7684\u5FEB\u6377\u65B9\u5F0F\u3002
+
+\`\`\`typescript
+import { createNode } from '@milkdown/utils';
+
+export const myNode = createNode<Keys>((options, utils) => {
+    const id = 'myNode';
+    const style = 'my-class-name';
+
+    return {
+        id,
+        schema: {
+            content: 'inline*',
+            group: 'block',
+            parseDOM: [{ tag: 'div' }],
+            toDOM: (node) => ['div', { class: utils.getClassName(node.attrs, id, style) }, 0],
+        },
+        // ...other props
+    };
+});
+\`\`\`
+
+\u5728\u4E0A\u8FF0\u4F8B\u5B50\u4E2D\uFF0C\u9ED8\u8BA4\u60C5\u51B5\u4E0B\uFF0C\u751F\u6210\u7684 block \u662F\u4E00\u4E2A\`div\`\u5143\u7D20\uFF0C\u5B83\u62E5\u6709\u7C7B\u540D\uFF1A\`myNode my-class-name\`\u3002
+\u7528\u6237\u4E5F\u53EF\u4EE5\u901A\u8FC7\u914D\u7F6E\u81EA\u5B9A\u4E49\u7C7B\u540D\uFF1A
+
+\`\`\`typescript
+Editor.use(
+    myNode({
+        className: (attrs) => ['my-custom-node-className', attrs.disabled && 'disabled'],
+    }),
+);
+\`\`\`
+
+### ctx
+
+\u4F60\u4E5F\u53EF\u4EE5\u8BBF\u95EE\u7F16\u8F91\u5668\u7684*ctx*\u3002
+
+\`\`\`typescript
+import { rootCtx } from '@milkdown/core';
+import { createProsePlugin } from '@milkdown/utils';
+
+export const myProsemirrorPlugin = createProsePlugin((_, utils) => {
+    const { ctx } = utils;
+    const getRootElement = () => ctx.get(rootCtx);
+
+    return new Plugin({
+        // ...define your plugin
+        // Get root element
+        const rootElement = getRootElement();
+    });
+});
+\`\`\`
+
+## \u547D\u4EE4\u548C\u5FEB\u6377\u952E
+
+\u5728**node \u548C mark**\u4E2D\uFF0C\u5B9A\u4E49\u547D\u4EE4\u548C\u5FEB\u6377\u952E\u4F1A\u66F4\u52A0\u7B80\u5355\u3002
+
+\u4F8B\u5982\u5728\u6807\u9898\u8282\u70B9\u4E2D\uFF1A
+
+\`\`\`typescript
+import { createCmd, createCmdKey } from '@milkdown/core';
+import { createNode, createShortcut } from '@milkdown/utils';
+import { setBlockType } from '@milkdown/prose';
+
+type Keys = 'H1' | 'H2' | 'H3';
+
+export const TurnIntoHeading = createCmdKey<number>();
+export const heading = createNode<Keys>((_, utils) => {
+    const id = 'heading';
+
+    return {
+        id,
+        schema: {
+            content: 'inline*',
+            group: 'block',
+            attrs: {
+                level: {
+                    default: 1,
+                },
+            },
+            parseDOM: [1, 2, 3].map((x) => ({ tag: \`h\${x}\`, attrs: { level: x } })),
+            toDOM: (node) => [\`h\${node.attrs.level}\`, 0],
+        },
+        // ...some other props
+
+        // \u5B9E\u73B0\u547D\u4EE4
+        commands: (nodeType) => [createCmd(TurnIntoHeading, (level = 1) => setBlockType(nodeType, { level }))],
+
+        // \u5C06\u547D\u4EE4\u6620\u5C04\u5230\u5FEB\u6377\u952E
+        shortcuts: {
+            [SupportedKeys.H1]: createShortcut(TurnIntoHeading, 'Mod-Alt-1', 1),
+            [SupportedKeys.H2]: createShortcut(TurnIntoHeading, 'Mod-Alt-2', 2),
+            [SupportedKeys.H3]: createShortcut(TurnIntoHeading, 'Mod-Alt-3', 3),
+        },
+    };
+});
+\`\`\`
+
+\u5728\u8FD9\u4E2A\u4F8B\u5B50\u4E2D\uFF0C\u6211\u4EEC\u4F7F\u7528\`createCmdKey\`\u6765\u6CE8\u518C\u547D\u4EE4\uFF0C\u7136\u540E\u4F7F\u7528\`createCmd\`\u6765\u5B9E\u73B0\u5B83\u3002
+\u7C7B\u578B\u53D8\u91CF\u4E2D\u7684\`number\`\u610F\u5473\u7740\u8FD9\u4E2A\u547D\u4EE4\u88AB\u8C03\u7528\u65F6\u53EF\u4EE5\u63A5\u53D7\`number\`\u7C7B\u578B\u7684\u53C2\u6570\u3002
+\u7136\u540E\uFF0C\u6211\u4EEC\u53EF\u4EE5\u4F7F\u7528\u8FD9\u4E2A\u547D\u4EE4\u6765\u521B\u5EFA\u5FEB\u6377\u952E\u3002
+
+\u901A\u8FC7\u8FD9\u4E2A\u6A21\u5F0F\uFF0C\u6211\u4EEC\u4E5F\u63D0\u4F9B\u4E86\u81EA\u5B9A\u4E49\u5FEB\u6377\u952E\u7684\u80FD\u529B\u3002
+
+\`\`\`typescript
+Editor.use(
+    heading({
+        keymap: {
+            H1: 'Mod-shift-1',
+            H2: 'Mod-shift-2',
+            H3: 'Mod-shift-3',
+        },
+    }),
+);
+\`\`\`
+
+\u4F60\u53EF\u80FD\u6CE8\u610F\u5230\u4E86\u5B9A\u4E49\u7684\`Keys\`\u7C7B\u578B\uFF0C\u5B83\u7528\u4E8E\u544A\u8BC9 typescript \u652F\u6301\u7684\u5FEB\u6377\u952E\u3002
+\u5982\u679C\u7528\u6237\u8BD5\u56FE\u81EA\u5B9A\u4E49\u8D85\u51FA\u8303\u56F4\u7684\u5FEB\u6377\u952E\uFF0Ctypescript \u4F1A\u544A\u8BC9\u4ED6\u4EEC\uFF1A
+
+\`\`\`typescript
+Editor.use(
+    heading({
+        keymap: {
+            // typescript\u7F16\u8BD1\u65F6\u4F1A\u62A5\u9519
+            H4: 'Mod-shift-4',
+        },
+    }),
+);
+\`\`\`
+
+# AtomList
+
+\u5728\u771F\u5B9E\u4E16\u754C\u4E2D\uFF0C\u4E00\u4E2A\u5305\u7ECF\u5E38\u7531\u4E00\u7CFB\u5217 milkdown \u63D2\u4EF6\u7EC4\u6210\u3002
+\`AtomList\`\u53EF\u4EE5\u5E2E\u52A9\u7528\u6237\u66F4\u7B80\u5355\u7684\u4F7F\u7528\u548C\u914D\u7F6E\u63D2\u4EF6\u5217\u8868\u3002
+
+\`\`\`typescript
+import { createNode, AtomList } from '@milkdown/utils';
+const node1 = createNode(/* node1 */);
+const node2 = createNode(/* node2 */);
+const node3 = createNode(/* node3 */);
+
+const mySyntaxPlugin = AtomList.create([node1(), node2(), node3()]);
+
+Editor.use(mySyntaxPlugin);
+
+// \u914D\u7F6E\u63D2\u4EF6\uFF1A
+Editor.use(
+    mySyntaxPlugin.configure(node1, {
+        keymap: {
+            //...
+        },
+    }),
+);
+// \u7B49\u540C\u4E8E\uFF1A
+Editor.use([
+    node1({
+        keymap: {
+            //...
+        },
+    }),
+    node2(),
+    node3(),
+]);
+
+// \u4E3A\u6240\u6709\u63D2\u4EF6\u5F00\u542F\u65E0\u5934\u6A21\u5F0F\uFF1A
+Editor.use(mySyntaxPlugin.headless());
+
+// \u79FB\u9664\u4E00\u4E2A\u63D2\u4EF6\uFF1A
+Editor.use(mySyntaxPlugin.remove(node1));
+
+// \u66FF\u6362\u4E00\u4E2A\u63D2\u4EF6\uFF1A
+const myNode1 = createNode(/* ... */);
+Editor.use(mySyntaxPlugin.replace(node1, myNode1));
+\`\`\`
+`;export{n as default};

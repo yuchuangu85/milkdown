@@ -1,1 +1,209 @@
-export default"# 与编辑器交互\n\n## DOM 节点的注册\n\n默认情况下，Milkdown 会基于 document.body 创建一个编辑器。当然你也可以通过下面方法来指定要挂载编辑器的 DOM 节点：\n\n```typescript\nimport { rootCtx } from '@milkdown/core';\n\nEditor.make().config((ctx) => {\n    ctx.set(rootCtx, document.querySelector('#editor'));\n});\n```\n\n## 编辑器默认值类型的设定\n\n### Markdown\n\n你可以设置符合 Markdown 语法的字符串作为编辑器的默认值类型。\n\n```typescript\nimport { defaultValueCtx } from '@milkdown/core';\n\nconst defaultValue = '# Hello milkdown';\nEditor.make().config((ctx) => {\n    ctx.set(defaultValueCtx, defaultValue);\n});\n```\n\n接着，编辑器将会对默认值进行相应渲染。\n\n### Dom 节点\n\n你也可以通过使用 HTML 作为编辑器的默认值类型。\n\n假设我们编写了下面的一段 HTML 代码：\n\n```html\n<div id=\"pre\">\n    <h1>Hello milkdown!</h1>\n</div>\n```\n\n紧接着，我们需要明确默认值的类型为 HTML，进行编辑器的渲染配置：\n\n```typescript\nimport { defaultValueCtx } from '@milkdown/core';\n\nconst defaultValue = {\n    type: 'html',\n    dom: document.querySelector('#pre'),\n};\nEditor.make().config((ctx) => {\n    ctx.set(defaultValueCtx, defaultValue);\n});\n```\n\n### JSON\n\n你也可以使用 JSON 对象作为默认值。\n\n这个 JSON 对象可以通过监听器 [listener-plugin](https://www.npmjs.com/package/@milkdown/plugin-listener) 进行获取，例如：\n\n```typescript\nimport { listener, listenerCtx } from '@milkdown/plugin-listener';\n\nlet jsonOutput;\nconst myListener = {\n    doc: [\n        (node) => {\n            jsonOutput = node.toJSON();\n        },\n    ],\n};\n\nEditor.make()\n    .config((ctx) => {\n        ctx.set(listenerCtx, myListener);\n    })\n    .use(listener);\n```\n\n接着，我们可以使用获取到的 `jsonOutput` 作为编辑器的默认值配置：\n\n```typescript\nimport { defaultValueCtx } from '@milkdown/core';\n\nconst defaultValue = {\n    type: 'json',\n    value: jsonOutput,\n};\nEditor.make().config((ctx) => {\n    ctx.set(defaultValueCtx, defaultValue);\n});\n```\n\n---\n\n## 添加监听器\n\n正如上半部分所提到的那样，你可以通过在编辑器添加监听器，来获取你所需要的值。\n\n这里监听器分为以下两种：\n\n### Markdown 监听器\n\n你可以添加 Markdown 监听器来获取你需要的 markdown 字符串的输出。\n\n你可以添加任意多个监听器，所有的监听器将会一次改动中被触发。\n\n```typescript\nimport { listener, listenerCtx } from '@milkdown/plugin-listener';\n\nlet output = '';\nconst listener = {\n    markdown: [\n        (getMarkdown) => {\n            if (needGetOutput) {\n                output = getMarkdown();\n            }\n        },\n        (getMarkdown) => {\n            if (needLog) {\n                console.log(getMarkdown());\n            }\n        },\n    ],\n};\n\nEditor.make()\n    .config((ctx) => {\n        ctx.set(listenerCtx, listener);\n    })\n    .use(listener);\n```\n\n### Doc 监听器\n\n你也可以通过监听 [raw prosemirror document node](https://prosemirror.net/docs/ref/#model.Node)，来进行功能的实现。\n\n```typescript\nimport { listener, listenerCtx } from '@milkdown/plugin-listener';\n\nlet jsonOutput;\n\nconst listener = {\n    docs: [\n        (node) => {\n            jsonOutput = node.toJSON();\n        },\n    ],\n};\n\nEditor.make()\n    .config((ctx) => {\n        ctx.set(listenerCtx, listener);\n    })\n    .use(listener);\n```\n\n---\n\n## 只读模式\n\n你可以通过设定 `editable` 属性来设置编辑器是否只读\n\n```typescript\nimport { editorViewOptionsCtx } from '@milkdown/core';\n\nlet readonly = false;\n\nconst editable = () => !readonly;\n\nEditor.make().config((ctx) => {\n    ctx.set(editorViewOptionsCtx, { editable });\n});\n\n// set to readonly after 5 secs.\nsetTimeout(() => {\n    readonly = true;\n}, 5000);\n```\n\n---\n\n## 使用 Action\n\n你可以通过使用 Action 来获取编辑器运行时的上下文。\n\n例如，通过 Action 获取 Markdown 字符串：\n\n```typescript\nimport { Editor, editorViewCtx, serializerCtx } from '@milkdown/core';\n\nasync function playWithEditor() {\n    const editor = await Editor.make().use(commonmark).create();\n\n    const getMarkdown = () =>\n        editor.action((ctx) => {\n            const editorView = ctx.get(editorViewCtx);\n            const serializer = ctx.get(serializerCtx);\n            return serializer(editorView.state.doc);\n        });\n\n    // get markdown string:\n    getMarkdown();\n}\n```\n";
+var n=`# \u4E0E\u7F16\u8F91\u5668\u4EA4\u4E92
+
+## DOM \u8282\u70B9\u7684\u6CE8\u518C
+
+\u9ED8\u8BA4\u60C5\u51B5\u4E0B\uFF0CMilkdown \u4F1A\u57FA\u4E8E document.body \u521B\u5EFA\u4E00\u4E2A\u7F16\u8F91\u5668\u3002\u5F53\u7136\u4F60\u4E5F\u53EF\u4EE5\u901A\u8FC7\u4E0B\u9762\u65B9\u6CD5\u6765\u6307\u5B9A\u8981\u6302\u8F7D\u7F16\u8F91\u5668\u7684 DOM \u8282\u70B9\uFF1A
+
+\`\`\`typescript
+import { rootCtx } from '@milkdown/core';
+
+Editor.make().config((ctx) => {
+    ctx.set(rootCtx, document.querySelector('#editor'));
+});
+\`\`\`
+
+## \u7F16\u8F91\u5668\u9ED8\u8BA4\u503C\u7C7B\u578B\u7684\u8BBE\u5B9A
+
+### Markdown
+
+\u4F60\u53EF\u4EE5\u8BBE\u7F6E\u7B26\u5408 Markdown \u8BED\u6CD5\u7684\u5B57\u7B26\u4E32\u4F5C\u4E3A\u7F16\u8F91\u5668\u7684\u9ED8\u8BA4\u503C\u7C7B\u578B\u3002
+
+\`\`\`typescript
+import { defaultValueCtx } from '@milkdown/core';
+
+const defaultValue = '# Hello milkdown';
+Editor.make().config((ctx) => {
+    ctx.set(defaultValueCtx, defaultValue);
+});
+\`\`\`
+
+\u63A5\u7740\uFF0C\u7F16\u8F91\u5668\u5C06\u4F1A\u5BF9\u9ED8\u8BA4\u503C\u8FDB\u884C\u76F8\u5E94\u6E32\u67D3\u3002
+
+### Dom \u8282\u70B9
+
+\u4F60\u4E5F\u53EF\u4EE5\u901A\u8FC7\u4F7F\u7528 HTML \u4F5C\u4E3A\u7F16\u8F91\u5668\u7684\u9ED8\u8BA4\u503C\u7C7B\u578B\u3002
+
+\u5047\u8BBE\u6211\u4EEC\u7F16\u5199\u4E86\u4E0B\u9762\u7684\u4E00\u6BB5 HTML \u4EE3\u7801\uFF1A
+
+\`\`\`html
+<div id="pre">
+    <h1>Hello milkdown!</h1>
+</div>
+\`\`\`
+
+\u7D27\u63A5\u7740\uFF0C\u6211\u4EEC\u9700\u8981\u660E\u786E\u9ED8\u8BA4\u503C\u7684\u7C7B\u578B\u4E3A HTML\uFF0C\u8FDB\u884C\u7F16\u8F91\u5668\u7684\u6E32\u67D3\u914D\u7F6E\uFF1A
+
+\`\`\`typescript
+import { defaultValueCtx } from '@milkdown/core';
+
+const defaultValue = {
+    type: 'html',
+    dom: document.querySelector('#pre'),
+};
+Editor.make().config((ctx) => {
+    ctx.set(defaultValueCtx, defaultValue);
+});
+\`\`\`
+
+### JSON
+
+\u4F60\u4E5F\u53EF\u4EE5\u4F7F\u7528 JSON \u5BF9\u8C61\u4F5C\u4E3A\u9ED8\u8BA4\u503C\u3002
+
+\u8FD9\u4E2A JSON \u5BF9\u8C61\u53EF\u4EE5\u901A\u8FC7\u76D1\u542C\u5668 [listener-plugin](https://www.npmjs.com/package/@milkdown/plugin-listener) \u8FDB\u884C\u83B7\u53D6\uFF0C\u4F8B\u5982\uFF1A
+
+\`\`\`typescript
+import { listener, listenerCtx } from '@milkdown/plugin-listener';
+
+let jsonOutput;
+const myListener = {
+    doc: [
+        (node) => {
+            jsonOutput = node.toJSON();
+        },
+    ],
+};
+
+Editor.make()
+    .config((ctx) => {
+        ctx.set(listenerCtx, myListener);
+    })
+    .use(listener);
+\`\`\`
+
+\u63A5\u7740\uFF0C\u6211\u4EEC\u53EF\u4EE5\u4F7F\u7528\u83B7\u53D6\u5230\u7684 \`jsonOutput\` \u4F5C\u4E3A\u7F16\u8F91\u5668\u7684\u9ED8\u8BA4\u503C\u914D\u7F6E\uFF1A
+
+\`\`\`typescript
+import { defaultValueCtx } from '@milkdown/core';
+
+const defaultValue = {
+    type: 'json',
+    value: jsonOutput,
+};
+Editor.make().config((ctx) => {
+    ctx.set(defaultValueCtx, defaultValue);
+});
+\`\`\`
+
+---
+
+## \u6DFB\u52A0\u76D1\u542C\u5668
+
+\u6B63\u5982\u4E0A\u534A\u90E8\u5206\u6240\u63D0\u5230\u7684\u90A3\u6837\uFF0C\u4F60\u53EF\u4EE5\u901A\u8FC7\u5728\u7F16\u8F91\u5668\u6DFB\u52A0\u76D1\u542C\u5668\uFF0C\u6765\u83B7\u53D6\u4F60\u6240\u9700\u8981\u7684\u503C\u3002
+
+\u8FD9\u91CC\u76D1\u542C\u5668\u5206\u4E3A\u4EE5\u4E0B\u4E24\u79CD\uFF1A
+
+### Markdown \u76D1\u542C\u5668
+
+\u4F60\u53EF\u4EE5\u6DFB\u52A0 Markdown \u76D1\u542C\u5668\u6765\u83B7\u53D6\u4F60\u9700\u8981\u7684 markdown \u5B57\u7B26\u4E32\u7684\u8F93\u51FA\u3002
+
+\u4F60\u53EF\u4EE5\u6DFB\u52A0\u4EFB\u610F\u591A\u4E2A\u76D1\u542C\u5668\uFF0C\u6240\u6709\u7684\u76D1\u542C\u5668\u5C06\u4F1A\u4E00\u6B21\u6539\u52A8\u4E2D\u88AB\u89E6\u53D1\u3002
+
+\`\`\`typescript
+import { listener, listenerCtx } from '@milkdown/plugin-listener';
+
+let output = '';
+const listener = {
+    markdown: [
+        (getMarkdown) => {
+            if (needGetOutput) {
+                output = getMarkdown();
+            }
+        },
+        (getMarkdown) => {
+            if (needLog) {
+                console.log(getMarkdown());
+            }
+        },
+    ],
+};
+
+Editor.make()
+    .config((ctx) => {
+        ctx.set(listenerCtx, listener);
+    })
+    .use(listener);
+\`\`\`
+
+### Doc \u76D1\u542C\u5668
+
+\u4F60\u4E5F\u53EF\u4EE5\u901A\u8FC7\u76D1\u542C [raw prosemirror document node](https://prosemirror.net/docs/ref/#model.Node)\uFF0C\u6765\u8FDB\u884C\u529F\u80FD\u7684\u5B9E\u73B0\u3002
+
+\`\`\`typescript
+import { listener, listenerCtx } from '@milkdown/plugin-listener';
+
+let jsonOutput;
+
+const listener = {
+    docs: [
+        (node) => {
+            jsonOutput = node.toJSON();
+        },
+    ],
+};
+
+Editor.make()
+    .config((ctx) => {
+        ctx.set(listenerCtx, listener);
+    })
+    .use(listener);
+\`\`\`
+
+---
+
+## \u53EA\u8BFB\u6A21\u5F0F
+
+\u4F60\u53EF\u4EE5\u901A\u8FC7\u8BBE\u5B9A \`editable\` \u5C5E\u6027\u6765\u8BBE\u7F6E\u7F16\u8F91\u5668\u662F\u5426\u53EA\u8BFB
+
+\`\`\`typescript
+import { editorViewOptionsCtx } from '@milkdown/core';
+
+let readonly = false;
+
+const editable = () => !readonly;
+
+Editor.make().config((ctx) => {
+    ctx.set(editorViewOptionsCtx, { editable });
+});
+
+// set to readonly after 5 secs.
+setTimeout(() => {
+    readonly = true;
+}, 5000);
+\`\`\`
+
+---
+
+## \u4F7F\u7528 Action
+
+\u4F60\u53EF\u4EE5\u901A\u8FC7\u4F7F\u7528 Action \u6765\u83B7\u53D6\u7F16\u8F91\u5668\u8FD0\u884C\u65F6\u7684\u4E0A\u4E0B\u6587\u3002
+
+\u4F8B\u5982\uFF0C\u901A\u8FC7 Action \u83B7\u53D6 Markdown \u5B57\u7B26\u4E32\uFF1A
+
+\`\`\`typescript
+import { Editor, editorViewCtx, serializerCtx } from '@milkdown/core';
+
+async function playWithEditor() {
+    const editor = await Editor.make().use(commonmark).create();
+
+    const getMarkdown = () =>
+        editor.action((ctx) => {
+            const editorView = ctx.get(editorViewCtx);
+            const serializer = ctx.get(serializerCtx);
+            return serializer(editorView.state.doc);
+        });
+
+    // get markdown string:
+    getMarkdown();
+}
+\`\`\`
+`;export{n as default};

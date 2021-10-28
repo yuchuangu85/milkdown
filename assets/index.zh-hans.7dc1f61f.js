@@ -1,1 +1,112 @@
-export default"# 序列化器\n\n序列化器用于将 UI 元素转换为 markdown 字符串.\n\n## 转换步骤\n\n整个转换过程几乎与解析器相反。\n\n1. 对于每一个当前的 UI 状态，都有一个对应的 prosemirror 节点树能够表示它。\n2. 这个 prosemirror 节点树将会被序列化器遍历。Milkdown 序列化器通过 node 和 mark 的定义生成。Milkdown 序列化器会把一个 prosemirror 节点树转换为一个 remark AST。\n3. 这个 remark AST 将会被传入 [remark-stringify](https://github.com/remarkjs/remark/tree/main/packages/remark-stringify) 来转换为 markdown 字符串。\n\n## 例子\n\n对于每一个 node/mark，都需要定义一个序列化器声明，它有以下结构：\n\n```typescript\nimport { nodeFactory } from '@milkdown/core';\n\nconst MyNode = nodeFactory({\n    // other props...\n    serializer = {\n        match: (node) => node.type.name === 'my-node',\n        runner: (state, node) => {\n            state.openNode('my-node').next(node.content).closeNode();\n        },\n    },\n});\n```\n\n## 序列化器声明\n\n序列化器声明有 2 个属性：\n\n-   _match_: 匹配需要当前 runner 处理的目标 remark 节点。\n\n-   _runner_:\n\n    -   Node runner:\n        函数将 prosemirror node 转换到 remark AST，他有 2 个参数：\n\n        -   _state_: 用于生成 remark AST 的工具。\n        -   _node_: 当前 runner 要处理的 prosemirror node。\n\n    -   Mark runner:\n        函数将 prosemirror mark 转换到 remark AST，他有 3 个参数：\n\n        -   _state_: 用于生成 remark AST 的工具。\n        -   _mark_: 当前 runner 要处理的 prosemirror mark。\n        -   _node_: 含有当前 mark 的 node。\n\n        > 如果 mark 的 runner 的返回值为 `true` 而不是`undefined` 或 `null`，\n        > 那么拥有这个 mark 的 node 也将由当前 runner 处理，而不会交给序列化器的其它部分。\n\n## 序列化器 state\n\n序列化器的 state 被用于生成 remark AST，\n它提供了许多有用的方法来让转换变得十分简单。\n\n### openNode & closeNode\n\n`openNode` 方法用于打开一个 remark 节点，在这之后创建的所有节点都将是被打开的 node 的子节点，直到调用`closeNode`。\n\n你可以将 `openNode` 想象为左括号，那么 `closeNode` 就是右括号。 对于有子节点的情况，你的解析器应该尽量只处理当前节点本身，然后让子节点自己的序列化器来处理它自己。\n\n参数：\n\n-   _type_: 节点 的 type 属性。\n-   _value_: 节点 的 value 属性。\n-   _props_: 节点的其它属性。\n\n这里的 props 会被展开，例如：\n\n```typescript\nopenNode('my-node', undefined, { foo: true, bar: 0 });\n// will generate:\nconst generatedCode = {\n    type: 'my-node',\n    foo: true,\n    bar: 0,\n    children: [\n        /* some children */\n    ],\n};\n```\n\n### addNode\n\n`addNode` 意味着直接添加节点而不打开或关闭它，一般用于没有子节点或需要手动处理子节点的情况。\n\n参数：\n\n-   _type_: 节点 的 type 属性。\n-   _value_: 节点 的 value 属性。\n-   _props_: 节点的其它属性。\n-   _children_: 节点的子节点，是一个节点数组。\n\n### next\n\n`next` 将节点或节点列表传回给 state，state 会找到合适的 runner（通过检查每个 node/mark 的`match`属性）来处理它。\n\n### withMark\n\n`withMark` 用于，当前节点包括 mark 时，序列化将会自动将当前节点的 mark 和相邻节点的 mark 进行合并。\n\nParameters:\n\n-   _mark_: 当前节点的 prosemirror mark。\n-   _type_: 节点 的 type 属性。\n-   _value_: 节点 的 value 属性。\n-   _props_: 节点的其它属性。\n";
+var n=`# \u5E8F\u5217\u5316\u5668
+
+\u5E8F\u5217\u5316\u5668\u7528\u4E8E\u5C06 UI \u5143\u7D20\u8F6C\u6362\u4E3A markdown \u5B57\u7B26\u4E32.
+
+## \u8F6C\u6362\u6B65\u9AA4
+
+\u6574\u4E2A\u8F6C\u6362\u8FC7\u7A0B\u51E0\u4E4E\u4E0E\u89E3\u6790\u5668\u76F8\u53CD\u3002
+
+1. \u5BF9\u4E8E\u6BCF\u4E00\u4E2A\u5F53\u524D\u7684 UI \u72B6\u6001\uFF0C\u90FD\u6709\u4E00\u4E2A\u5BF9\u5E94\u7684 prosemirror \u8282\u70B9\u6811\u80FD\u591F\u8868\u793A\u5B83\u3002
+2. \u8FD9\u4E2A prosemirror \u8282\u70B9\u6811\u5C06\u4F1A\u88AB\u5E8F\u5217\u5316\u5668\u904D\u5386\u3002Milkdown \u5E8F\u5217\u5316\u5668\u901A\u8FC7 node \u548C mark \u7684\u5B9A\u4E49\u751F\u6210\u3002Milkdown \u5E8F\u5217\u5316\u5668\u4F1A\u628A\u4E00\u4E2A prosemirror \u8282\u70B9\u6811\u8F6C\u6362\u4E3A\u4E00\u4E2A remark AST\u3002
+3. \u8FD9\u4E2A remark AST \u5C06\u4F1A\u88AB\u4F20\u5165 [remark-stringify](https://github.com/remarkjs/remark/tree/main/packages/remark-stringify) \u6765\u8F6C\u6362\u4E3A markdown \u5B57\u7B26\u4E32\u3002
+
+## \u4F8B\u5B50
+
+\u5BF9\u4E8E\u6BCF\u4E00\u4E2A node/mark\uFF0C\u90FD\u9700\u8981\u5B9A\u4E49\u4E00\u4E2A\u5E8F\u5217\u5316\u5668\u58F0\u660E\uFF0C\u5B83\u6709\u4EE5\u4E0B\u7ED3\u6784\uFF1A
+
+\`\`\`typescript
+import { nodeFactory } from '@milkdown/core';
+
+const MyNode = nodeFactory({
+    // other props...
+    serializer = {
+        match: (node) => node.type.name === 'my-node',
+        runner: (state, node) => {
+            state.openNode('my-node').next(node.content).closeNode();
+        },
+    },
+});
+\`\`\`
+
+## \u5E8F\u5217\u5316\u5668\u58F0\u660E
+
+\u5E8F\u5217\u5316\u5668\u58F0\u660E\u6709 2 \u4E2A\u5C5E\u6027\uFF1A
+
+-   _match_: \u5339\u914D\u9700\u8981\u5F53\u524D runner \u5904\u7406\u7684\u76EE\u6807 remark \u8282\u70B9\u3002
+
+-   _runner_:
+
+    -   Node runner:
+        \u51FD\u6570\u5C06 prosemirror node \u8F6C\u6362\u5230 remark AST\uFF0C\u4ED6\u6709 2 \u4E2A\u53C2\u6570\uFF1A
+
+        -   _state_: \u7528\u4E8E\u751F\u6210 remark AST \u7684\u5DE5\u5177\u3002
+        -   _node_: \u5F53\u524D runner \u8981\u5904\u7406\u7684 prosemirror node\u3002
+
+    -   Mark runner:
+        \u51FD\u6570\u5C06 prosemirror mark \u8F6C\u6362\u5230 remark AST\uFF0C\u4ED6\u6709 3 \u4E2A\u53C2\u6570\uFF1A
+
+        -   _state_: \u7528\u4E8E\u751F\u6210 remark AST \u7684\u5DE5\u5177\u3002
+        -   _mark_: \u5F53\u524D runner \u8981\u5904\u7406\u7684 prosemirror mark\u3002
+        -   _node_: \u542B\u6709\u5F53\u524D mark \u7684 node\u3002
+
+        > \u5982\u679C mark \u7684 runner \u7684\u8FD4\u56DE\u503C\u4E3A \`true\` \u800C\u4E0D\u662F\`undefined\` \u6216 \`null\`\uFF0C
+        > \u90A3\u4E48\u62E5\u6709\u8FD9\u4E2A mark \u7684 node \u4E5F\u5C06\u7531\u5F53\u524D runner \u5904\u7406\uFF0C\u800C\u4E0D\u4F1A\u4EA4\u7ED9\u5E8F\u5217\u5316\u5668\u7684\u5176\u5B83\u90E8\u5206\u3002
+
+## \u5E8F\u5217\u5316\u5668 state
+
+\u5E8F\u5217\u5316\u5668\u7684 state \u88AB\u7528\u4E8E\u751F\u6210 remark AST\uFF0C
+\u5B83\u63D0\u4F9B\u4E86\u8BB8\u591A\u6709\u7528\u7684\u65B9\u6CD5\u6765\u8BA9\u8F6C\u6362\u53D8\u5F97\u5341\u5206\u7B80\u5355\u3002
+
+### openNode & closeNode
+
+\`openNode\` \u65B9\u6CD5\u7528\u4E8E\u6253\u5F00\u4E00\u4E2A remark \u8282\u70B9\uFF0C\u5728\u8FD9\u4E4B\u540E\u521B\u5EFA\u7684\u6240\u6709\u8282\u70B9\u90FD\u5C06\u662F\u88AB\u6253\u5F00\u7684 node \u7684\u5B50\u8282\u70B9\uFF0C\u76F4\u5230\u8C03\u7528\`closeNode\`\u3002
+
+\u4F60\u53EF\u4EE5\u5C06 \`openNode\` \u60F3\u8C61\u4E3A\u5DE6\u62EC\u53F7\uFF0C\u90A3\u4E48 \`closeNode\` \u5C31\u662F\u53F3\u62EC\u53F7\u3002 \u5BF9\u4E8E\u6709\u5B50\u8282\u70B9\u7684\u60C5\u51B5\uFF0C\u4F60\u7684\u89E3\u6790\u5668\u5E94\u8BE5\u5C3D\u91CF\u53EA\u5904\u7406\u5F53\u524D\u8282\u70B9\u672C\u8EAB\uFF0C\u7136\u540E\u8BA9\u5B50\u8282\u70B9\u81EA\u5DF1\u7684\u5E8F\u5217\u5316\u5668\u6765\u5904\u7406\u5B83\u81EA\u5DF1\u3002
+
+\u53C2\u6570\uFF1A
+
+-   _type_: \u8282\u70B9 \u7684 type \u5C5E\u6027\u3002
+-   _value_: \u8282\u70B9 \u7684 value \u5C5E\u6027\u3002
+-   _props_: \u8282\u70B9\u7684\u5176\u5B83\u5C5E\u6027\u3002
+
+\u8FD9\u91CC\u7684 props \u4F1A\u88AB\u5C55\u5F00\uFF0C\u4F8B\u5982\uFF1A
+
+\`\`\`typescript
+openNode('my-node', undefined, { foo: true, bar: 0 });
+// will generate:
+const generatedCode = {
+    type: 'my-node',
+    foo: true,
+    bar: 0,
+    children: [
+        /* some children */
+    ],
+};
+\`\`\`
+
+### addNode
+
+\`addNode\` \u610F\u5473\u7740\u76F4\u63A5\u6DFB\u52A0\u8282\u70B9\u800C\u4E0D\u6253\u5F00\u6216\u5173\u95ED\u5B83\uFF0C\u4E00\u822C\u7528\u4E8E\u6CA1\u6709\u5B50\u8282\u70B9\u6216\u9700\u8981\u624B\u52A8\u5904\u7406\u5B50\u8282\u70B9\u7684\u60C5\u51B5\u3002
+
+\u53C2\u6570\uFF1A
+
+-   _type_: \u8282\u70B9 \u7684 type \u5C5E\u6027\u3002
+-   _value_: \u8282\u70B9 \u7684 value \u5C5E\u6027\u3002
+-   _props_: \u8282\u70B9\u7684\u5176\u5B83\u5C5E\u6027\u3002
+-   _children_: \u8282\u70B9\u7684\u5B50\u8282\u70B9\uFF0C\u662F\u4E00\u4E2A\u8282\u70B9\u6570\u7EC4\u3002
+
+### next
+
+\`next\` \u5C06\u8282\u70B9\u6216\u8282\u70B9\u5217\u8868\u4F20\u56DE\u7ED9 state\uFF0Cstate \u4F1A\u627E\u5230\u5408\u9002\u7684 runner\uFF08\u901A\u8FC7\u68C0\u67E5\u6BCF\u4E2A node/mark \u7684\`match\`\u5C5E\u6027\uFF09\u6765\u5904\u7406\u5B83\u3002
+
+### withMark
+
+\`withMark\` \u7528\u4E8E\uFF0C\u5F53\u524D\u8282\u70B9\u5305\u62EC mark \u65F6\uFF0C\u5E8F\u5217\u5316\u5C06\u4F1A\u81EA\u52A8\u5C06\u5F53\u524D\u8282\u70B9\u7684 mark \u548C\u76F8\u90BB\u8282\u70B9\u7684 mark \u8FDB\u884C\u5408\u5E76\u3002
+
+Parameters:
+
+-   _mark_: \u5F53\u524D\u8282\u70B9\u7684 prosemirror mark\u3002
+-   _type_: \u8282\u70B9 \u7684 type \u5C5E\u6027\u3002
+-   _value_: \u8282\u70B9 \u7684 value \u5C5E\u6027\u3002
+-   _props_: \u8282\u70B9\u7684\u5176\u5B83\u5C5E\u6027\u3002
+`;export{n as default};

@@ -1,1 +1,207 @@
-export default"# Interacting with Editor\n\n## Register to DOM\n\nBy default, milkdown will create editor on `document.body`. You can also point out which dom you want it to load on:\n\n```typescript\nimport { rootCtx } from '@milkdown/core';\n\nEditor.make().config((ctx) => {\n    ctx.set(rootCtx, document.querySelector('#editor'));\n});\n```\n\n## Setting Default Value\n\n### Markdown\n\nYou can set a markdown string as the default value of the editor.\n\n```typescript\nimport { defaultValueCtx } from '@milkdown/core';\n\nconst defaultValue = '# Hello milkdown';\nEditor.make().config((ctx) => {\n    ctx.set(defaultValueCtx, defaultValue);\n});\n```\n\nAnd then the editor will be rendered with default value.\n\n### Dom\n\nYou can also use HTML as default value.\n\nLet's assume that we have following html snippets:\n\n```html\n<div id=\"pre\">\n    <h1>Hello milkdown!</h1>\n</div>\n```\n\nThen we can use it as defaultValue with a `type` specification:\n\n```typescript\nimport { defaultValueCtx } from '@milkdown/core';\n\nconst defaultValue = {\n    type: 'html',\n    dom: document.querySelector('#pre'),\n};\nEditor.make().config((ctx) => {\n    ctx.set(defaultValueCtx, defaultValue);\n});\n```\n\n### JSON\n\nWe can also use JSON object as default value.\n\nThis JSON object can be get by listener through [listener-plugin](https://www.npmjs.com/package/@milkdown/plugin-listener), for example:\n\n```typescript\nimport { listener, listenerCtx } from '@milkdown/plugin-listener';\n\nlet jsonOutput;\nconst myListener = {\n    doc: [\n        (node) => {\n            jsonOutput = node.toJSON();\n        },\n    ],\n};\n\nEditor.make()\n    .config((ctx) => {\n        ctx.set(listenerCtx, myListener);\n    })\n    .use(listener);\n```\n\nThen we can use this `jsonOutput` as default Value:\n\n```typescript\nimport { defaultValueCtx } from '@milkdown/core';\n\nconst defaultValue = {\n    type: 'json',\n    value: jsonOutput,\n};\nEditor.make().config((ctx) => {\n    ctx.set(defaultValueCtx, defaultValue);\n});\n```\n\n---\n\n## Adding Listener\n\nAs mentioned above, you can add listener to the editor, get values when needed.\n\n### Markdown Listener\n\nYou can add markdown listener to get the markdown string output when needed.\n\nYou can add as many listeners as you want, all the listener will be triggered in one change.\n\n```typescript\nimport { listener, listenerCtx } from '@milkdown/plugin-listener';\n\nlet output = '';\nconst listener = {\n    markdown: [\n        (getMarkdown) => {\n            if (needGetOutput) {\n                output = getMarkdown();\n            }\n        },\n        (getMarkdown) => {\n            if (needLog) {\n                console.log(getMarkdown());\n            }\n        },\n    ],\n};\n\nEditor.make()\n    .config((ctx) => {\n        ctx.set(listenerCtx, listener);\n    })\n    .use(listener);\n```\n\n### Doc Listener\n\nYou can also listen to the [raw prosemirror document node](https://prosemirror.net/docs/ref/#model.Node), and do things you want.\n\n```typescript\nimport { listener, listenerCtx } from '@milkdown/plugin-listener';\n\nlet jsonOutput;\n\nconst listener = {\n    docs: [\n        (node) => {\n            jsonOutput = node.toJSON();\n        },\n    ],\n};\n\nEditor.make()\n    .config((ctx) => {\n        ctx.set(listenerCtx, listener);\n    })\n    .use(listener);\n```\n\n---\n\n## Readonly Mode\n\nYou can set the editor to readonly mode by set the `editable` property.\n\n```typescript\nimport { editorViewOptionsCtx } from '@milkdown/core';\n\nlet readonly = false;\n\nconst editable = () => !readonly;\n\nEditor.make().config((ctx) => {\n    ctx.set(editorViewOptionsCtx, { editable });\n});\n\n// set to readonly after 5 secs.\nsetTimeout(() => {\n    readonly = true;\n}, 5000);\n```\n\n---\n\n## Using Action\n\nYou can use action to get the context value in a running editor on demand.\n\nFor example, get the markdown string by action:\n\n```typescript\nimport { Editor, editorViewCtx, serializerCtx } from '@milkdown/core';\n\nasync function playWithEditor() {\n    const editor = await Editor.make().use(commonmark).create();\n\n    const getMarkdown = () =>\n        editor.action((ctx) => {\n            const editorView = ctx.get(editorViewCtx);\n            const serializer = ctx.get(serializerCtx);\n            return serializer(editorView.state.doc);\n        });\n\n    // get markdown string:\n    getMarkdown();\n}\n```\n";
+var n=`# Interacting with Editor
+
+## Register to DOM
+
+By default, milkdown will create editor on \`document.body\`. You can also point out which dom you want it to load on:
+
+\`\`\`typescript
+import { rootCtx } from '@milkdown/core';
+
+Editor.make().config((ctx) => {
+    ctx.set(rootCtx, document.querySelector('#editor'));
+});
+\`\`\`
+
+## Setting Default Value
+
+### Markdown
+
+You can set a markdown string as the default value of the editor.
+
+\`\`\`typescript
+import { defaultValueCtx } from '@milkdown/core';
+
+const defaultValue = '# Hello milkdown';
+Editor.make().config((ctx) => {
+    ctx.set(defaultValueCtx, defaultValue);
+});
+\`\`\`
+
+And then the editor will be rendered with default value.
+
+### Dom
+
+You can also use HTML as default value.
+
+Let's assume that we have following html snippets:
+
+\`\`\`html
+<div id="pre">
+    <h1>Hello milkdown!</h1>
+</div>
+\`\`\`
+
+Then we can use it as defaultValue with a \`type\` specification:
+
+\`\`\`typescript
+import { defaultValueCtx } from '@milkdown/core';
+
+const defaultValue = {
+    type: 'html',
+    dom: document.querySelector('#pre'),
+};
+Editor.make().config((ctx) => {
+    ctx.set(defaultValueCtx, defaultValue);
+});
+\`\`\`
+
+### JSON
+
+We can also use JSON object as default value.
+
+This JSON object can be get by listener through [listener-plugin](https://www.npmjs.com/package/@milkdown/plugin-listener), for example:
+
+\`\`\`typescript
+import { listener, listenerCtx } from '@milkdown/plugin-listener';
+
+let jsonOutput;
+const myListener = {
+    doc: [
+        (node) => {
+            jsonOutput = node.toJSON();
+        },
+    ],
+};
+
+Editor.make()
+    .config((ctx) => {
+        ctx.set(listenerCtx, myListener);
+    })
+    .use(listener);
+\`\`\`
+
+Then we can use this \`jsonOutput\` as default Value:
+
+\`\`\`typescript
+import { defaultValueCtx } from '@milkdown/core';
+
+const defaultValue = {
+    type: 'json',
+    value: jsonOutput,
+};
+Editor.make().config((ctx) => {
+    ctx.set(defaultValueCtx, defaultValue);
+});
+\`\`\`
+
+---
+
+## Adding Listener
+
+As mentioned above, you can add listener to the editor, get values when needed.
+
+### Markdown Listener
+
+You can add markdown listener to get the markdown string output when needed.
+
+You can add as many listeners as you want, all the listener will be triggered in one change.
+
+\`\`\`typescript
+import { listener, listenerCtx } from '@milkdown/plugin-listener';
+
+let output = '';
+const listener = {
+    markdown: [
+        (getMarkdown) => {
+            if (needGetOutput) {
+                output = getMarkdown();
+            }
+        },
+        (getMarkdown) => {
+            if (needLog) {
+                console.log(getMarkdown());
+            }
+        },
+    ],
+};
+
+Editor.make()
+    .config((ctx) => {
+        ctx.set(listenerCtx, listener);
+    })
+    .use(listener);
+\`\`\`
+
+### Doc Listener
+
+You can also listen to the [raw prosemirror document node](https://prosemirror.net/docs/ref/#model.Node), and do things you want.
+
+\`\`\`typescript
+import { listener, listenerCtx } from '@milkdown/plugin-listener';
+
+let jsonOutput;
+
+const listener = {
+    docs: [
+        (node) => {
+            jsonOutput = node.toJSON();
+        },
+    ],
+};
+
+Editor.make()
+    .config((ctx) => {
+        ctx.set(listenerCtx, listener);
+    })
+    .use(listener);
+\`\`\`
+
+---
+
+## Readonly Mode
+
+You can set the editor to readonly mode by set the \`editable\` property.
+
+\`\`\`typescript
+import { editorViewOptionsCtx } from '@milkdown/core';
+
+let readonly = false;
+
+const editable = () => !readonly;
+
+Editor.make().config((ctx) => {
+    ctx.set(editorViewOptionsCtx, { editable });
+});
+
+// set to readonly after 5 secs.
+setTimeout(() => {
+    readonly = true;
+}, 5000);
+\`\`\`
+
+---
+
+## Using Action
+
+You can use action to get the context value in a running editor on demand.
+
+For example, get the markdown string by action:
+
+\`\`\`typescript
+import { Editor, editorViewCtx, serializerCtx } from '@milkdown/core';
+
+async function playWithEditor() {
+    const editor = await Editor.make().use(commonmark).create();
+
+    const getMarkdown = () =>
+        editor.action((ctx) => {
+            const editorView = ctx.get(editorViewCtx);
+            const serializer = ctx.get(serializerCtx);
+            return serializer(editorView.state.doc);
+        });
+
+    // get markdown string:
+    getMarkdown();
+}
+\`\`\`
+`;export{n as default};

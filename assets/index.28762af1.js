@@ -1,1 +1,166 @@
-export default"# Writing Syntax Plugins\n\nGenerally, if we want to add a custom syntax plugin, there are 5 things need to be done:\n\n1. Add a remark plugin to make sure the syntax can be parsed and serialized correctly.\n2. Define the prosemirror schema for your custom node.\n3. Write a parser specification to transform the remark AST into prosemirror node.\n4. Write a serializer specification to transform the prosemirror node into remark AST.\n5. Write prosemirror input rules to make sure user input can be handled correctly.\n\n---\n\nIn this section, we will add a **custom iframe syntax** to insert iframe as node in milkdown.\n\n## Remark Plugin\n\nFirst, we need a remark plugin to support our custom syntax.\nLuckily, remark provides a powerful [remark directive plugin](https://github.com/remarkjs/remark-directive) to support custom syntax. With this plugin, we can easily define a iframe using following text:\n\n```markdown\n# My Iframe\n\n:iframe{src=\"https://saul-mirone.github.io\"}\n```\n\nSo, what we needs to do is just install it and transform it into a milkdown plugin:\n\n```typescript\nimport { remarkPluginFactory } from '@milkdown/core';\nimport directive from 'remark-directive';\n\nconst directiveRemarkPlugin = remarkPluginFactory(directive);\n```\n\n## Define Schema\n\nNext, we need to define the schema of an iframe node,\nour iframe should be an inline node because it doesn't have and children,\nand have a `src` attribute to connect to the source.\n\n```typescript\nimport { nodeFactory } from '@milkdown/core';\n\nconst id = 'iframe';\nconst iframe = nodeFactory({\n    id,\n    schema: {\n        inline: true,\n        attrs: {\n            src: { default: null },\n        },\n        group: 'inline',\n        marks: '',\n        parseDOM: [\n            {\n                tag: 'iframe',\n                getAttrs: (dom) => {\n                    if (!(dom instanceof HTMLElement)) {\n                        throw new Error();\n                    }\n                    return {\n                        src: dom.getAttribute('src'),\n                    };\n                },\n            },\n        ],\n        toDOM: (node) => ['iframe', { ...node.attrs, class: 'iframe' }, 0],\n    },\n});\n```\n\n## Parser\n\nThen, we need to add a parser specification to transform remark AST to prosemirror node.\nYou can use some inspect tools to find out the remark AST structure,\nwe noticed that the iframe node have following structure:\n\n```typescript\nconst AST = {\n    name: 'iframe',\n    attributes: { src: 'https://saul-mirone.github.io' },\n    type: 'textDirective',\n};\n```\n\nSo we can easily write our parser specification for it:\n\n```typescript\nconst iframe = nodeFactory({\n    // ...\n    parser: {\n        match: (node) => node.type === 'textDirective' && node.name === 'iframe',\n        runner: (state, node, type) => {\n            state.addNode(type, { src: (node.attributes as { src: string }).src });\n        },\n    },\n});\n```\n\nNow, text in `defaultValue` can be parsed to iframe elements correctly.\n\n## Serializer\n\nThen, we need to add a serializer specification to transform prosemirror node to remark AST:\n\n```typescript\nconst iframe = nodeFactory({\n    // ...\n    serializer: {\n        match: (node) => node.type.name === id,\n        runner: (state, node) => {\n            state.addNode('textDirective', undefined, undefined, {\n                name: 'iframe',\n                attributes: {\n                    src: node.attrs.src,\n                },\n            });\n        },\n    },\n});\n```\n\nNow, iframe elements can be serialized into string correctly.\n\n## Input Rule\n\nFor user input texts that should be transformed into iframe, we also should make it work.\nWe can use `inputRules` to define [prosemirror input rules](https://prosemirror.net/docs/ref/#inputrules) to implement this:\n\n```typescript\nimport { Node } from '@milkdown/core';\nimport { InputRule } from 'prosemirror-inputrules';\n\nconst iframe = nodeFactory({\n    // ...\n    inputRules: (nodeType) => [\n        new InputRule(/:iframe\\{src\\=\"(?<src>[^\"]+)?\"?\\}/, (state, match, start, end) => {\n            const [okay, src = ''] = match;\n            const { tr } = state;\n            if (okay) {\n                tr.replaceWith(start, end, nodeType.create({ src }));\n            }\n\n            return tr;\n        }),\n    ],\n});\n```\n\n## Use Plugins\n\nThen, we can just `use` the plugins we write:\n\n```typescript\nimport { Editor } from '@milkdown/core';\nimport { commonmark } from '@milkdown/preset-commonmark';\n\nEditor.make().use([directiveRemarkPlugin, iframe]).use(commonmark).create();\n```\n\n---\n\n## Full Code\n\n!CodeSandBox{milkdown-custom-syntax-mudgd}\n";
+var n=`# Writing Syntax Plugins
+
+Generally, if we want to add a custom syntax plugin, there are 5 things need to be done:
+
+1. Add a remark plugin to make sure the syntax can be parsed and serialized correctly.
+2. Define the prosemirror schema for your custom node.
+3. Write a parser specification to transform the remark AST into prosemirror node.
+4. Write a serializer specification to transform the prosemirror node into remark AST.
+5. Write prosemirror input rules to make sure user input can be handled correctly.
+
+---
+
+In this section, we will add a **custom iframe syntax** to insert iframe as node in milkdown.
+
+## Remark Plugin
+
+First, we need a remark plugin to support our custom syntax.
+Luckily, remark provides a powerful [remark directive plugin](https://github.com/remarkjs/remark-directive) to support custom syntax. With this plugin, we can easily define a iframe using following text:
+
+\`\`\`markdown
+# My Iframe
+
+:iframe{src="https://saul-mirone.github.io"}
+\`\`\`
+
+So, what we needs to do is just install it and transform it into a milkdown plugin:
+
+\`\`\`typescript
+import { remarkPluginFactory } from '@milkdown/core';
+import directive from 'remark-directive';
+
+const directiveRemarkPlugin = remarkPluginFactory(directive);
+\`\`\`
+
+## Define Schema
+
+Next, we need to define the schema of an iframe node,
+our iframe should be an inline node because it doesn't have and children,
+and have a \`src\` attribute to connect to the source.
+
+\`\`\`typescript
+import { nodeFactory } from '@milkdown/core';
+
+const id = 'iframe';
+const iframe = nodeFactory({
+    id,
+    schema: {
+        inline: true,
+        attrs: {
+            src: { default: null },
+        },
+        group: 'inline',
+        marks: '',
+        parseDOM: [
+            {
+                tag: 'iframe',
+                getAttrs: (dom) => {
+                    if (!(dom instanceof HTMLElement)) {
+                        throw new Error();
+                    }
+                    return {
+                        src: dom.getAttribute('src'),
+                    };
+                },
+            },
+        ],
+        toDOM: (node) => ['iframe', { ...node.attrs, class: 'iframe' }, 0],
+    },
+});
+\`\`\`
+
+## Parser
+
+Then, we need to add a parser specification to transform remark AST to prosemirror node.
+You can use some inspect tools to find out the remark AST structure,
+we noticed that the iframe node have following structure:
+
+\`\`\`typescript
+const AST = {
+    name: 'iframe',
+    attributes: { src: 'https://saul-mirone.github.io' },
+    type: 'textDirective',
+};
+\`\`\`
+
+So we can easily write our parser specification for it:
+
+\`\`\`typescript
+const iframe = nodeFactory({
+    // ...
+    parser: {
+        match: (node) => node.type === 'textDirective' && node.name === 'iframe',
+        runner: (state, node, type) => {
+            state.addNode(type, { src: (node.attributes as { src: string }).src });
+        },
+    },
+});
+\`\`\`
+
+Now, text in \`defaultValue\` can be parsed to iframe elements correctly.
+
+## Serializer
+
+Then, we need to add a serializer specification to transform prosemirror node to remark AST:
+
+\`\`\`typescript
+const iframe = nodeFactory({
+    // ...
+    serializer: {
+        match: (node) => node.type.name === id,
+        runner: (state, node) => {
+            state.addNode('textDirective', undefined, undefined, {
+                name: 'iframe',
+                attributes: {
+                    src: node.attrs.src,
+                },
+            });
+        },
+    },
+});
+\`\`\`
+
+Now, iframe elements can be serialized into string correctly.
+
+## Input Rule
+
+For user input texts that should be transformed into iframe, we also should make it work.
+We can use \`inputRules\` to define [prosemirror input rules](https://prosemirror.net/docs/ref/#inputrules) to implement this:
+
+\`\`\`typescript
+import { Node } from '@milkdown/core';
+import { InputRule } from 'prosemirror-inputrules';
+
+const iframe = nodeFactory({
+    // ...
+    inputRules: (nodeType) => [
+        new InputRule(/:iframe\\{src\\="(?<src>[^"]+)?"?\\}/, (state, match, start, end) => {
+            const [okay, src = ''] = match;
+            const { tr } = state;
+            if (okay) {
+                tr.replaceWith(start, end, nodeType.create({ src }));
+            }
+
+            return tr;
+        }),
+    ],
+});
+\`\`\`
+
+## Use Plugins
+
+Then, we can just \`use\` the plugins we write:
+
+\`\`\`typescript
+import { Editor } from '@milkdown/core';
+import { commonmark } from '@milkdown/preset-commonmark';
+
+Editor.make().use([directiveRemarkPlugin, iframe]).use(commonmark).create();
+\`\`\`
+
+---
+
+## Full Code
+
+!CodeSandBox{milkdown-custom-syntax-mudgd}
+`;export{n as default};

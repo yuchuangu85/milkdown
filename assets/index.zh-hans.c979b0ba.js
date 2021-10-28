@@ -1,1 +1,84 @@
-export default"# 解析器\n\n解析器被用于将 markdown 转换为 UI 元素。\n\n## 转换步骤\n\n整个转换过程分为以下步骤：\n\n1. Markdown 将被传给 [remark-parse](https://github.com/remarkjs/remark/tree/main/packages/remark-parse) 并转换为 AST。\n2. 这个 remark AST 将被 milkdown 解析器遍历。milkdown 解析器通过 node 和 mark 的定义生成。milkdown 解析器会把 AST 转换为 prosemirror 节点树。\n3. 生成的节点树将被 prosemirror 渲染，并生成对应的 UI 元素。\n\n## 例子\n\n对于每一个 node/mark，都需要定义一个解析器声明，它有以下结构：\n\n```typescript\nimport { nodeFactory } from '@milkdown/core';\n\nconst myNode = nodeFactory({\n    // other props...\n    parser: {\n        match: (node) => node.type === 'my-node',\n        runner: (state, node, type) => {\n            state.openNode(type).next(node.children).closeNode();\n        },\n    },\n});\n```\n\n## 解析器声明\n\n解析器声明有 2 个属性:\n\n-   _match_: 匹配需要当前 runner 处理的目标 remark 节点。\n\n-   _runner_: 一个函数，用于将目标 remark 节点转换为 prosemirror 节点, 它有 3 个参数:\n\n    -   _state_: 用来生成 prosemirror 节点的工具。\n    -   _node_: 需要被转换的 remark 节点。\n    -   _type_: 需要转换为的目标 prosemirror 节点的*[nodeType](https://prosemirror.net/docs/ref/#model.NodeType)*或*[markType](https://prosemirror.net/docs/ref/#model.MarkType)*，\n        它是由当前 node/mark 中的 `schema` 属性定义的。\n\n## 解析器 state\n\n解析器 state 用于生成 prosemirror 的 node/mark。\n它提供了许多有用的方法来让转换变得十分简单。\n\n首先，我们需要知道我们要处理的是类似下面这种结构：\n\n```typescript\ninterface NodeTree {\n    type: string;\n    children: NodeTree[];\n    [x: string]: unknown;\n}\n```\n\n这有助于帮助我们理解 state API。\n\n### openNode & closeNode\n\n`openNode` 方法用于打开一个 prosemirror node，在这之后创建的所有节点都将是被打开的 node 的子节点，直到调用`closeNode`。\n\n你可以将 `openNode` 想象为左括号，那么 `closeNode` 就是右括号。 对于有子节点的情况，你的解析器应该尽量只处理当前节点本身，然后让子节点自己的解析器来处理它自己。\n\n你可以将 node 的标签通过第二个参数传给 `openNode`。\n\n### addNode\n\n`addNode` 意味着直接添加节点而不打开或关闭它，一般用于没有子节点或需要手动处理子节点的情况。\n\n你可以将 node 的标签通过第二个参数传给 `addNode`。\n\n### next\n\n`next` 将节点或节点列表传回给 state，state 会找到合适的 runner（通过检查每个 node/mark 的 `match` 属性）来处理它。\n\n### openMark & closeMark\n\n这两个 API 与 `openNode` 和 `closeNode` 很相似，只不过它们用于创建 prosemirror mark。\n\n你可以将 mark 的标签通过第二个参数传给 `openMark`。\n";
+var n=`# \u89E3\u6790\u5668
+
+\u89E3\u6790\u5668\u88AB\u7528\u4E8E\u5C06 markdown \u8F6C\u6362\u4E3A UI \u5143\u7D20\u3002
+
+## \u8F6C\u6362\u6B65\u9AA4
+
+\u6574\u4E2A\u8F6C\u6362\u8FC7\u7A0B\u5206\u4E3A\u4EE5\u4E0B\u6B65\u9AA4\uFF1A
+
+1. Markdown \u5C06\u88AB\u4F20\u7ED9 [remark-parse](https://github.com/remarkjs/remark/tree/main/packages/remark-parse) \u5E76\u8F6C\u6362\u4E3A AST\u3002
+2. \u8FD9\u4E2A remark AST \u5C06\u88AB milkdown \u89E3\u6790\u5668\u904D\u5386\u3002milkdown \u89E3\u6790\u5668\u901A\u8FC7 node \u548C mark \u7684\u5B9A\u4E49\u751F\u6210\u3002milkdown \u89E3\u6790\u5668\u4F1A\u628A AST \u8F6C\u6362\u4E3A prosemirror \u8282\u70B9\u6811\u3002
+3. \u751F\u6210\u7684\u8282\u70B9\u6811\u5C06\u88AB prosemirror \u6E32\u67D3\uFF0C\u5E76\u751F\u6210\u5BF9\u5E94\u7684 UI \u5143\u7D20\u3002
+
+## \u4F8B\u5B50
+
+\u5BF9\u4E8E\u6BCF\u4E00\u4E2A node/mark\uFF0C\u90FD\u9700\u8981\u5B9A\u4E49\u4E00\u4E2A\u89E3\u6790\u5668\u58F0\u660E\uFF0C\u5B83\u6709\u4EE5\u4E0B\u7ED3\u6784\uFF1A
+
+\`\`\`typescript
+import { nodeFactory } from '@milkdown/core';
+
+const myNode = nodeFactory({
+    // other props...
+    parser: {
+        match: (node) => node.type === 'my-node',
+        runner: (state, node, type) => {
+            state.openNode(type).next(node.children).closeNode();
+        },
+    },
+});
+\`\`\`
+
+## \u89E3\u6790\u5668\u58F0\u660E
+
+\u89E3\u6790\u5668\u58F0\u660E\u6709 2 \u4E2A\u5C5E\u6027:
+
+-   _match_: \u5339\u914D\u9700\u8981\u5F53\u524D runner \u5904\u7406\u7684\u76EE\u6807 remark \u8282\u70B9\u3002
+
+-   _runner_: \u4E00\u4E2A\u51FD\u6570\uFF0C\u7528\u4E8E\u5C06\u76EE\u6807 remark \u8282\u70B9\u8F6C\u6362\u4E3A prosemirror \u8282\u70B9, \u5B83\u6709 3 \u4E2A\u53C2\u6570:
+
+    -   _state_: \u7528\u6765\u751F\u6210 prosemirror \u8282\u70B9\u7684\u5DE5\u5177\u3002
+    -   _node_: \u9700\u8981\u88AB\u8F6C\u6362\u7684 remark \u8282\u70B9\u3002
+    -   _type_: \u9700\u8981\u8F6C\u6362\u4E3A\u7684\u76EE\u6807 prosemirror \u8282\u70B9\u7684*[nodeType](https://prosemirror.net/docs/ref/#model.NodeType)*\u6216*[markType](https://prosemirror.net/docs/ref/#model.MarkType)*\uFF0C
+        \u5B83\u662F\u7531\u5F53\u524D node/mark \u4E2D\u7684 \`schema\` \u5C5E\u6027\u5B9A\u4E49\u7684\u3002
+
+## \u89E3\u6790\u5668 state
+
+\u89E3\u6790\u5668 state \u7528\u4E8E\u751F\u6210 prosemirror \u7684 node/mark\u3002
+\u5B83\u63D0\u4F9B\u4E86\u8BB8\u591A\u6709\u7528\u7684\u65B9\u6CD5\u6765\u8BA9\u8F6C\u6362\u53D8\u5F97\u5341\u5206\u7B80\u5355\u3002
+
+\u9996\u5148\uFF0C\u6211\u4EEC\u9700\u8981\u77E5\u9053\u6211\u4EEC\u8981\u5904\u7406\u7684\u662F\u7C7B\u4F3C\u4E0B\u9762\u8FD9\u79CD\u7ED3\u6784\uFF1A
+
+\`\`\`typescript
+interface NodeTree {
+    type: string;
+    children: NodeTree[];
+    [x: string]: unknown;
+}
+\`\`\`
+
+\u8FD9\u6709\u52A9\u4E8E\u5E2E\u52A9\u6211\u4EEC\u7406\u89E3 state API\u3002
+
+### openNode & closeNode
+
+\`openNode\` \u65B9\u6CD5\u7528\u4E8E\u6253\u5F00\u4E00\u4E2A prosemirror node\uFF0C\u5728\u8FD9\u4E4B\u540E\u521B\u5EFA\u7684\u6240\u6709\u8282\u70B9\u90FD\u5C06\u662F\u88AB\u6253\u5F00\u7684 node \u7684\u5B50\u8282\u70B9\uFF0C\u76F4\u5230\u8C03\u7528\`closeNode\`\u3002
+
+\u4F60\u53EF\u4EE5\u5C06 \`openNode\` \u60F3\u8C61\u4E3A\u5DE6\u62EC\u53F7\uFF0C\u90A3\u4E48 \`closeNode\` \u5C31\u662F\u53F3\u62EC\u53F7\u3002 \u5BF9\u4E8E\u6709\u5B50\u8282\u70B9\u7684\u60C5\u51B5\uFF0C\u4F60\u7684\u89E3\u6790\u5668\u5E94\u8BE5\u5C3D\u91CF\u53EA\u5904\u7406\u5F53\u524D\u8282\u70B9\u672C\u8EAB\uFF0C\u7136\u540E\u8BA9\u5B50\u8282\u70B9\u81EA\u5DF1\u7684\u89E3\u6790\u5668\u6765\u5904\u7406\u5B83\u81EA\u5DF1\u3002
+
+\u4F60\u53EF\u4EE5\u5C06 node \u7684\u6807\u7B7E\u901A\u8FC7\u7B2C\u4E8C\u4E2A\u53C2\u6570\u4F20\u7ED9 \`openNode\`\u3002
+
+### addNode
+
+\`addNode\` \u610F\u5473\u7740\u76F4\u63A5\u6DFB\u52A0\u8282\u70B9\u800C\u4E0D\u6253\u5F00\u6216\u5173\u95ED\u5B83\uFF0C\u4E00\u822C\u7528\u4E8E\u6CA1\u6709\u5B50\u8282\u70B9\u6216\u9700\u8981\u624B\u52A8\u5904\u7406\u5B50\u8282\u70B9\u7684\u60C5\u51B5\u3002
+
+\u4F60\u53EF\u4EE5\u5C06 node \u7684\u6807\u7B7E\u901A\u8FC7\u7B2C\u4E8C\u4E2A\u53C2\u6570\u4F20\u7ED9 \`addNode\`\u3002
+
+### next
+
+\`next\` \u5C06\u8282\u70B9\u6216\u8282\u70B9\u5217\u8868\u4F20\u56DE\u7ED9 state\uFF0Cstate \u4F1A\u627E\u5230\u5408\u9002\u7684 runner\uFF08\u901A\u8FC7\u68C0\u67E5\u6BCF\u4E2A node/mark \u7684 \`match\` \u5C5E\u6027\uFF09\u6765\u5904\u7406\u5B83\u3002
+
+### openMark & closeMark
+
+\u8FD9\u4E24\u4E2A API \u4E0E \`openNode\` \u548C \`closeNode\` \u5F88\u76F8\u4F3C\uFF0C\u53EA\u4E0D\u8FC7\u5B83\u4EEC\u7528\u4E8E\u521B\u5EFA prosemirror mark\u3002
+
+\u4F60\u53EF\u4EE5\u5C06 mark \u7684\u6807\u7B7E\u901A\u8FC7\u7B2C\u4E8C\u4E2A\u53C2\u6570\u4F20\u7ED9 \`openMark\`\u3002
+`;export{n as default};

@@ -1,1 +1,45 @@
-export default"# Svelte\n\n我们不提供开箱即用的 Svelte 支持，但你可以在 svelte 中轻松使用香草版本。\n\n## 依赖安装\n\n```bash\n# install with npm\nnpm install @milkdown/core @milkdown/preset-commonmark @milkdown/theme-nord\n```\n\n## 创建一个组件\n\n创建一个组件十分简单。\n\n```html\n<script>\n    import { onMount } from 'svelte';\n    import { Editor, rootCtx, defaultValueCtx } from '@milkdown/core';\n    import { commonmark } from '@milkdown/preset-commonmark';\n    import { nord } from '@milkdown/theme-nord';\n\n    export let defaultValue;\n\n    function editor(dom) {\n        Editor.make()\n            .config((ctx) => {\n                ctx.set(rootCtx, dom);\n                ctx.set(defaultValueCtx, defaultValue);\n            })\n            .use(nord)\n            .use(commonmark)\n            .create();\n    }\n<\/script>\n\n<style></style>\n\n<div use:editor />\n```\n\n### 在线示例\n\n!CodeSandBox{milkdown-svelte-setup-5we3g?fontsize=14&hidenavigation=1&theme=dark&view=preview}\n";
+var n=`# Svelte
+
+\u6211\u4EEC\u4E0D\u63D0\u4F9B\u5F00\u7BB1\u5373\u7528\u7684 Svelte \u652F\u6301\uFF0C\u4F46\u4F60\u53EF\u4EE5\u5728 svelte \u4E2D\u8F7B\u677E\u4F7F\u7528\u9999\u8349\u7248\u672C\u3002
+
+## \u4F9D\u8D56\u5B89\u88C5
+
+\`\`\`bash
+# install with npm
+npm install @milkdown/core @milkdown/preset-commonmark @milkdown/theme-nord
+\`\`\`
+
+## \u521B\u5EFA\u4E00\u4E2A\u7EC4\u4EF6
+
+\u521B\u5EFA\u4E00\u4E2A\u7EC4\u4EF6\u5341\u5206\u7B80\u5355\u3002
+
+\`\`\`html
+<script>
+    import { onMount } from 'svelte';
+    import { Editor, rootCtx, defaultValueCtx } from '@milkdown/core';
+    import { commonmark } from '@milkdown/preset-commonmark';
+    import { nord } from '@milkdown/theme-nord';
+
+    export let defaultValue;
+
+    function editor(dom) {
+        Editor.make()
+            .config((ctx) => {
+                ctx.set(rootCtx, dom);
+                ctx.set(defaultValueCtx, defaultValue);
+            })
+            .use(nord)
+            .use(commonmark)
+            .create();
+    }
+<\/script>
+
+<style></style>
+
+<div use:editor />
+\`\`\`
+
+### \u5728\u7EBF\u793A\u4F8B
+
+!CodeSandBox{milkdown-svelte-setup-5we3g?fontsize=14&hidenavigation=1&theme=dark&view=preview}
+`;export{n as default};

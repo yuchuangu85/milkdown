@@ -1,1 +1,122 @@
-export default"# Vue\n\nWe provide vue support out of box.\n\n> Vue version should be 3.x\n\n## Install the Dependencies\n\nExcept the `@milkdown/core`, preset and theme. We need to install the `@milkdown/vue`, which provide lots of abilities for vue in milkdown.\n\n```bash\n# install with npm\nnpm install @milkdown/vue @milkdown/core\n\n# optional\nnpm install @milkdown/preset-commonmark @milkdown/theme-nord\n```\n\n## Create a Component\n\nCreate a component is pretty easy.\n\n```typescript\nimport { defineComponent } from 'vue';\nimport { Editor, rootCtx } from '@milkdown/core';\nimport { nord } from '@milkdown/theme-nord';\nimport { VueEditor, useEditor } from '@milkdown/vue';\nimport { commonmark } from '@milkdown/preset-commonmark';\n\nexport const MilkdownEditor = defineComponent(() => {\n    const editor = useEditor((root) =>\n        Editor.make()\n            .config((ctx) => {\n                ctx.set(rootCtx, root);\n            })\n            .use(nord)\n            .use(commonmark),\n    );\n\n    return () => <VueEditor editor={editor} />;\n});\n```\n\n### Online Demo\n\n!CodeSandBox{milkdown-vue-setup-wjdup?fontsize=14&hidenavigation=1&theme=dark&view=preview}\n\n---\n\n## Custom Component for Node\n\nWe provide custom node support out of box.\n\n```typescript\nimport { inject, defineComponent, DefineComponent } from 'vue';\nimport { Editor, rootCtx } from '@milkdown/core';\nimport { VueEditor, useEditor } from '@milkdown/vue';\nimport { commonmark, paragraph, image } from '@milkdown/preset-commonmark';\nimport { Node } from 'prosemirror-model';\n\nconst CustomParagraph: DefineComponent = defineComponent({\n    name: 'my-paragraph',\n    setup(_, { slots }) {\n        return () => <div class=\"vue-paragraph\">{slots.default?.()}</div>;\n    },\n});\n\nconst CustomImage: DefineComponent = defineComponent({\n    name: 'my-image',\n    setup() {\n        const node: Node = inject('node', {} as Node);\n\n        return () => <img class=\"vue-image\" src={node.attrs.src} alt={node.attrs.alt} />;\n    },\n});\n\nexport const MyEditor = defineComponent(() => {\n    const editor = useEditor((root, renderVue) => {\n        const nodes = commonmark\n            .configure(paragraph, {\n                view: renderVue(CustomParagraph),\n            })\n            .configure(image, {\n                view: renderVue(CustomImage),\n            });\n        return Editor.make()\n            .config((ctx) => {\n                ctx.set(rootCtx, root);\n            })\n            .use(nodes);\n    });\n\n    return () => <VueEditor editor={editor} />;\n});\n```\n\nValues that is injected for custom component:\n\n-   _editor_:\n\n    Instance of current milkdown editor.\n\n-   _node_:\n\n    Current prosemirror node need to be rendered.\n    Equal to [node parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).\n\n-   _view_:\n\n    Current prosemirror editor view.\n    Equal to [view parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).\n\n-   _getPos_:\n\n    Method to get position of current prosemirror node.\n    Equal to [getPos parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).\n\n-   _decorations_:\n\n    Decorations of current prosemirror node.\n    Equal to [decorations parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).\n";
+var n=`# Vue
+
+We provide vue support out of box.
+
+> Vue version should be 3.x
+
+## Install the Dependencies
+
+Except the \`@milkdown/core\`, preset and theme. We need to install the \`@milkdown/vue\`, which provide lots of abilities for vue in milkdown.
+
+\`\`\`bash
+# install with npm
+npm install @milkdown/vue @milkdown/core
+
+# optional
+npm install @milkdown/preset-commonmark @milkdown/theme-nord
+\`\`\`
+
+## Create a Component
+
+Create a component is pretty easy.
+
+\`\`\`typescript
+import { defineComponent } from 'vue';
+import { Editor, rootCtx } from '@milkdown/core';
+import { nord } from '@milkdown/theme-nord';
+import { VueEditor, useEditor } from '@milkdown/vue';
+import { commonmark } from '@milkdown/preset-commonmark';
+
+export const MilkdownEditor = defineComponent(() => {
+    const editor = useEditor((root) =>
+        Editor.make()
+            .config((ctx) => {
+                ctx.set(rootCtx, root);
+            })
+            .use(nord)
+            .use(commonmark),
+    );
+
+    return () => <VueEditor editor={editor} />;
+});
+\`\`\`
+
+### Online Demo
+
+!CodeSandBox{milkdown-vue-setup-wjdup?fontsize=14&hidenavigation=1&theme=dark&view=preview}
+
+---
+
+## Custom Component for Node
+
+We provide custom node support out of box.
+
+\`\`\`typescript
+import { inject, defineComponent, DefineComponent } from 'vue';
+import { Editor, rootCtx } from '@milkdown/core';
+import { VueEditor, useEditor } from '@milkdown/vue';
+import { commonmark, paragraph, image } from '@milkdown/preset-commonmark';
+import { Node } from 'prosemirror-model';
+
+const CustomParagraph: DefineComponent = defineComponent({
+    name: 'my-paragraph',
+    setup(_, { slots }) {
+        return () => <div class="vue-paragraph">{slots.default?.()}</div>;
+    },
+});
+
+const CustomImage: DefineComponent = defineComponent({
+    name: 'my-image',
+    setup() {
+        const node: Node = inject('node', {} as Node);
+
+        return () => <img class="vue-image" src={node.attrs.src} alt={node.attrs.alt} />;
+    },
+});
+
+export const MyEditor = defineComponent(() => {
+    const editor = useEditor((root, renderVue) => {
+        const nodes = commonmark
+            .configure(paragraph, {
+                view: renderVue(CustomParagraph),
+            })
+            .configure(image, {
+                view: renderVue(CustomImage),
+            });
+        return Editor.make()
+            .config((ctx) => {
+                ctx.set(rootCtx, root);
+            })
+            .use(nodes);
+    });
+
+    return () => <VueEditor editor={editor} />;
+});
+\`\`\`
+
+Values that is injected for custom component:
+
+-   _editor_:
+
+    Instance of current milkdown editor.
+
+-   _node_:
+
+    Current prosemirror node need to be rendered.
+    Equal to [node parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+
+-   _view_:
+
+    Current prosemirror editor view.
+    Equal to [view parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+
+-   _getPos_:
+
+    Method to get position of current prosemirror node.
+    Equal to [getPos parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+
+-   _decorations_:
+
+    Decorations of current prosemirror node.
+    Equal to [decorations parameter in nodeViews](https://prosemirror.net/docs/ref/#view.EditorProps.nodeViews).
+`;export{n as default};

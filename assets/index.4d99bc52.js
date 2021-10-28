@@ -1,1 +1,262 @@
-export default"# Using Utils Package\n\nWe provide a [util package](https://www.npmjs.com/package/@milkdown/utils) to provide more abilities and convenience when writing plugins.\n\n# Factory\n\nThe util package provides three factory functions:\n\n-   _createProsePlugin_:\n    Create a [prosemirror plugin](https://prosemirror.net/docs/ref/#state.Plugin_System).\n-   _createNode_:\n    Create a [prosemirror node](https://prosemirror.net/docs/ref/#model.Node).\n-   _createMark_:\n    Create a [prosemirror mark](https://prosemirror.net/docs/ref/#model.Mark).\n\n## Options\n\nSome times you may want the plugins can be configured with different options.\nWith factories provided in util package, you can easily implement this:\n\n```typescript\nimport { createProsePlugin } from '@milkdown/utils';\nimport { Plugin } from '@milkdown/prose';\n\ntype Options = {\n    color: string;\n};\n\nexport const myProsemirrorPlugin = createProsePlugin<Options>((options) => {\n    // All options must have a default value.\n    const color = options?.color ?? '#fff';\n\n    return new Plugin({\n        // ...define your plugin\n    });\n});\n\n// Usage:\n// Default\nEditor.use(myProsemirrorPlugin());\n\n// Custom Config\nEditor.use(myProsemirrorPlugin({ color: '#000' }));\n```\n\n## Utils\n\nWe provide some utils to make build features more easily.\n\n### getStyle\n\nWith the `getStyle` function, you can:\n\n-   Access the design system through [themeTool](/#/design-system).\n-   Make your style adapt the **headless mode**.\n\n```typescript\nimport { createProsePlugin } from '@milkdown/utils';\nimport { Plugin } from '@milkdown/prose';\nimport { css } from '@emotion/css';\n\ntype Options = {\n    color: string;\n};\n\nexport const myProsemirrorPlugin = createProsePlugin((_, utils) => {\n    const className = utils.getStyle((themeTool) => {\n        const primaryColor = themeTool.palette('primary');\n        const { shadow } = themeTool.mixin;\n\n        return css`\n            ${shadow};\n            color: ${primaryColor};\n        `;\n    });\n\n    return new Plugin({\n        // ...define your plugin\n    });\n});\n\n// Headless mode:\n// In headless mode, style created by `getStyle` will be disabled.\nEditor.use(myProsemirrorPlugin({ headless: true }));\n```\n\n### getClassName\n\nThe `getClassName` function is a shortcut for users to create class name.\n\n```typescript\nimport { createNode } from '@milkdown/utils';\n\nexport const myNode = createNode<Keys>((options, utils) => {\n    const id = 'myNode';\n    const style = 'my-class-name';\n\n    return {\n        id,\n        schema: {\n            content: 'inline*',\n            group: 'block',\n            parseDOM: [{ tag: 'div' }],\n            toDOM: (node) => ['div', { class: utils.getClassName(node.attrs, id, style) }, 0],\n        },\n        // ...other props\n    };\n});\n```\n\nIn the example above, by default, the generated block will be a `div` element with the className: `myNode my-class-name`. Users can also add custom class name by options:\n\n```typescript\nEditor.use(\n    myNode({\n        className: (attrs) => ['my-custom-node-className', attrs.disabled && 'disabled'],\n    }),\n);\n```\n\n### ctx\n\nYou can also get the editor _ctx_.\n\n```typescript\nimport { rootCtx } from '@milkdown/core';\nimport { createProsePlugin } from '@milkdown/utils';\n\nexport const myProsemirrorPlugin = createProsePlugin((_, utils) => {\n    const { ctx } = utils;\n    const getRootElement = () => ctx.get(rootCtx);\n\n    return new Plugin({\n        // ...define your plugin\n        // Get root element\n        const rootElement = getRootElement();\n    });\n});\n```\n\n## Commands and Shortcuts\n\nIn **node and mark**, define commands and shortcuts are much easier.\n\nFor example in heading node:\n\n```typescript\nimport { createCmd, createCmdKey } from '@milkdown/core';\nimport { createNode, createShortcut } from '@milkdown/utils';\nimport { setBlockType } from '@milkdown/prose';\n\ntype Keys = 'H1' | 'H2' | 'H3';\n\nexport const TurnIntoHeading = createCmdKey<number>();\nexport const heading = createNode<Keys>((_, utils) => {\n    const id = 'heading';\n\n    return {\n        id,\n        schema: {\n            content: 'inline*',\n            group: 'block',\n            attrs: {\n                level: {\n                    default: 1,\n                },\n            },\n            parseDOM: [1, 2, 3].map((x) => ({ tag: `h${x}`, attrs: { level: x } })),\n            toDOM: (node) => [`h${node.attrs.level}`, 0],\n        },\n        // ...some other props\n\n        // Implement the commands\n        commands: (nodeType) => [createCmd(TurnIntoHeading, (level = 1) => setBlockType(nodeType, { level }))],\n\n        // Map the commands to keys\n        shortcuts: {\n            [SupportedKeys.H1]: createShortcut(TurnIntoHeading, 'Mod-Alt-1', 1),\n            [SupportedKeys.H2]: createShortcut(TurnIntoHeading, 'Mod-Alt-2', 2),\n            [SupportedKeys.H3]: createShortcut(TurnIntoHeading, 'Mod-Alt-3', 3),\n        },\n    };\n});\n```\n\nIn this example, we use `createCmdKey` to register a command, and use `createCmd` to implement it.\nThe type variable `number` means this command can be called with a `number` as parameter.\nAnd then, we can use the command to create shortcuts.\n\nWith this pattern, we also provides the ability to remap these shortcuts.\n\n```typescript\nEditor.use(\n    heading({\n        keymap: {\n            H1: 'Mod-shift-1',\n            H2: 'Mod-shift-2',\n            H3: 'Mod-shift-3',\n        },\n    }),\n);\n```\n\nYou may notice the `Keys` type we defined, that's used to tell typescript the shortcuts the node or mark support.\nIf users provide a keymap out of scope, the typescript will let them know:\n\n```typescript\nEditor.use(\n    heading({\n        keymap: {\n            // Throw an error when compiled by typescript.\n            H4: 'Mod-shift-4',\n        },\n    }),\n);\n```\n\n# AtomList\n\nIn the real world, a package always composed by a series of milkdown plugins.\n`AtomList` can help users to use and configure a list of plugins more easily.\n\n```typescript\nimport { createNode, AtomList } from '@milkdown/utils';\nconst node1 = createNode(/* node1 */);\nconst node2 = createNode(/* node2 */);\nconst node3 = createNode(/* node3 */);\n\nconst mySyntaxPlugin = AtomList.create([node1(), node2(), node3()]);\n\nEditor.use(mySyntaxPlugin);\n\n// With configure:\nEditor.use(\n    mySyntaxPlugin.configure(node1, {\n        keymap: {\n            //...\n        },\n    }),\n);\n// Equal to:\nEditor.use([\n    node1({\n        keymap: {\n            //...\n        },\n    }),\n    node2(),\n    node3(),\n]);\n\n// Enable headless mode for all:\nEditor.use(mySyntaxPlugin.headless());\n\n// Remove one plugin:\nEditor.use(mySyntaxPlugin.remove(node1));\n\n// Replace one plugin:\nconst myNode1 = createNode(/* ... */);\nEditor.use(mySyntaxPlugin.replace(node1, myNode1));\n```\n";
+var n=`# Using Utils Package
+
+We provide a [util package](https://www.npmjs.com/package/@milkdown/utils) to provide more abilities and convenience when writing plugins.
+
+# Factory
+
+The util package provides three factory functions:
+
+-   _createProsePlugin_:
+    Create a [prosemirror plugin](https://prosemirror.net/docs/ref/#state.Plugin_System).
+-   _createNode_:
+    Create a [prosemirror node](https://prosemirror.net/docs/ref/#model.Node).
+-   _createMark_:
+    Create a [prosemirror mark](https://prosemirror.net/docs/ref/#model.Mark).
+
+## Options
+
+Some times you may want the plugins can be configured with different options.
+With factories provided in util package, you can easily implement this:
+
+\`\`\`typescript
+import { createProsePlugin } from '@milkdown/utils';
+import { Plugin } from '@milkdown/prose';
+
+type Options = {
+    color: string;
+};
+
+export const myProsemirrorPlugin = createProsePlugin<Options>((options) => {
+    // All options must have a default value.
+    const color = options?.color ?? '#fff';
+
+    return new Plugin({
+        // ...define your plugin
+    });
+});
+
+// Usage:
+// Default
+Editor.use(myProsemirrorPlugin());
+
+// Custom Config
+Editor.use(myProsemirrorPlugin({ color: '#000' }));
+\`\`\`
+
+## Utils
+
+We provide some utils to make build features more easily.
+
+### getStyle
+
+With the \`getStyle\` function, you can:
+
+-   Access the design system through [themeTool](/#/design-system).
+-   Make your style adapt the **headless mode**.
+
+\`\`\`typescript
+import { createProsePlugin } from '@milkdown/utils';
+import { Plugin } from '@milkdown/prose';
+import { css } from '@emotion/css';
+
+type Options = {
+    color: string;
+};
+
+export const myProsemirrorPlugin = createProsePlugin((_, utils) => {
+    const className = utils.getStyle((themeTool) => {
+        const primaryColor = themeTool.palette('primary');
+        const { shadow } = themeTool.mixin;
+
+        return css\`
+            \${shadow};
+            color: \${primaryColor};
+        \`;
+    });
+
+    return new Plugin({
+        // ...define your plugin
+    });
+});
+
+// Headless mode:
+// In headless mode, style created by \`getStyle\` will be disabled.
+Editor.use(myProsemirrorPlugin({ headless: true }));
+\`\`\`
+
+### getClassName
+
+The \`getClassName\` function is a shortcut for users to create class name.
+
+\`\`\`typescript
+import { createNode } from '@milkdown/utils';
+
+export const myNode = createNode<Keys>((options, utils) => {
+    const id = 'myNode';
+    const style = 'my-class-name';
+
+    return {
+        id,
+        schema: {
+            content: 'inline*',
+            group: 'block',
+            parseDOM: [{ tag: 'div' }],
+            toDOM: (node) => ['div', { class: utils.getClassName(node.attrs, id, style) }, 0],
+        },
+        // ...other props
+    };
+});
+\`\`\`
+
+In the example above, by default, the generated block will be a \`div\` element with the className: \`myNode my-class-name\`. Users can also add custom class name by options:
+
+\`\`\`typescript
+Editor.use(
+    myNode({
+        className: (attrs) => ['my-custom-node-className', attrs.disabled && 'disabled'],
+    }),
+);
+\`\`\`
+
+### ctx
+
+You can also get the editor _ctx_.
+
+\`\`\`typescript
+import { rootCtx } from '@milkdown/core';
+import { createProsePlugin } from '@milkdown/utils';
+
+export const myProsemirrorPlugin = createProsePlugin((_, utils) => {
+    const { ctx } = utils;
+    const getRootElement = () => ctx.get(rootCtx);
+
+    return new Plugin({
+        // ...define your plugin
+        // Get root element
+        const rootElement = getRootElement();
+    });
+});
+\`\`\`
+
+## Commands and Shortcuts
+
+In **node and mark**, define commands and shortcuts are much easier.
+
+For example in heading node:
+
+\`\`\`typescript
+import { createCmd, createCmdKey } from '@milkdown/core';
+import { createNode, createShortcut } from '@milkdown/utils';
+import { setBlockType } from '@milkdown/prose';
+
+type Keys = 'H1' | 'H2' | 'H3';
+
+export const TurnIntoHeading = createCmdKey<number>();
+export const heading = createNode<Keys>((_, utils) => {
+    const id = 'heading';
+
+    return {
+        id,
+        schema: {
+            content: 'inline*',
+            group: 'block',
+            attrs: {
+                level: {
+                    default: 1,
+                },
+            },
+            parseDOM: [1, 2, 3].map((x) => ({ tag: \`h\${x}\`, attrs: { level: x } })),
+            toDOM: (node) => [\`h\${node.attrs.level}\`, 0],
+        },
+        // ...some other props
+
+        // Implement the commands
+        commands: (nodeType) => [createCmd(TurnIntoHeading, (level = 1) => setBlockType(nodeType, { level }))],
+
+        // Map the commands to keys
+        shortcuts: {
+            [SupportedKeys.H1]: createShortcut(TurnIntoHeading, 'Mod-Alt-1', 1),
+            [SupportedKeys.H2]: createShortcut(TurnIntoHeading, 'Mod-Alt-2', 2),
+            [SupportedKeys.H3]: createShortcut(TurnIntoHeading, 'Mod-Alt-3', 3),
+        },
+    };
+});
+\`\`\`
+
+In this example, we use \`createCmdKey\` to register a command, and use \`createCmd\` to implement it.
+The type variable \`number\` means this command can be called with a \`number\` as parameter.
+And then, we can use the command to create shortcuts.
+
+With this pattern, we also provides the ability to remap these shortcuts.
+
+\`\`\`typescript
+Editor.use(
+    heading({
+        keymap: {
+            H1: 'Mod-shift-1',
+            H2: 'Mod-shift-2',
+            H3: 'Mod-shift-3',
+        },
+    }),
+);
+\`\`\`
+
+You may notice the \`Keys\` type we defined, that's used to tell typescript the shortcuts the node or mark support.
+If users provide a keymap out of scope, the typescript will let them know:
+
+\`\`\`typescript
+Editor.use(
+    heading({
+        keymap: {
+            // Throw an error when compiled by typescript.
+            H4: 'Mod-shift-4',
+        },
+    }),
+);
+\`\`\`
+
+# AtomList
+
+In the real world, a package always composed by a series of milkdown plugins.
+\`AtomList\` can help users to use and configure a list of plugins more easily.
+
+\`\`\`typescript
+import { createNode, AtomList } from '@milkdown/utils';
+const node1 = createNode(/* node1 */);
+const node2 = createNode(/* node2 */);
+const node3 = createNode(/* node3 */);
+
+const mySyntaxPlugin = AtomList.create([node1(), node2(), node3()]);
+
+Editor.use(mySyntaxPlugin);
+
+// With configure:
+Editor.use(
+    mySyntaxPlugin.configure(node1, {
+        keymap: {
+            //...
+        },
+    }),
+);
+// Equal to:
+Editor.use([
+    node1({
+        keymap: {
+            //...
+        },
+    }),
+    node2(),
+    node3(),
+]);
+
+// Enable headless mode for all:
+Editor.use(mySyntaxPlugin.headless());
+
+// Remove one plugin:
+Editor.use(mySyntaxPlugin.remove(node1));
+
+// Replace one plugin:
+const myNode1 = createNode(/* ... */);
+Editor.use(mySyntaxPlugin.replace(node1, myNode1));
+\`\`\`
+`;export{n as default};

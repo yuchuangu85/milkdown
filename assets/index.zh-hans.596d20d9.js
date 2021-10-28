@@ -1,1 +1,90 @@
-export default"# Node & Mark\n\nNode 和 Mark 是两个结构，它们被用于定义 prosemirror 的 [Node](https://prosemirror.net/docs/ref/#model.Node) 和 [Mark](https://prosemirror.net/docs/ref/#model.Mark).\n\n## 概览\n\n用户可以简单的用以下代码来定义一个 node：\n\n```typescript\nimport { nodeFactory } from '@milkdown/core';\n// mark也是类似\nimport { markFactory } from '@milkdown/core';\n\nconst id = 'paragraph';\nconst paragraph = nodeFactory({\n    id,\n    schema: {\n        content: 'inline*',\n        group: 'block',\n        parseDOM: [{ tag: 'p' }],\n        toDOM: () => ['p', { class: 'paragraph' }, 0],\n    },\n    parser: {\n        match: (node) => node.type === id,\n        runner: (state, node, type) => {\n            state.openNode(type).next(node.children).closeNode();\n        },\n    },\n    serializer: {\n        match: (node) => node.type.name === id,\n        runner: (state, node) => {\n            state.openNode('paragraph').next(node.content).closeNode();\n        },\n    },\n});\n```\n\n---\n\n## 属性\n\nnode/mark 有 4 个必选属性和 3 个可选属性。\n\n### id\n\n**必须。** node/mark 的标识符，也会被用于当作 [prosemirror schema][schema] 的 key。\n\n### schema\n\n**必须。** 当前 node/mark 的 [prosemirror schema][schema] 定义。\n\n### parser\n\n**必须。** 当前 node/mark 的 parser 定义，用于规定 markdown 被如何转换为目标节点。\n\n### serializer\n\n**必须。** 当前 node/mark 的 serializer 定义，用于规定当前节点被如何转换为 markdown。\n\n### inputRules?\n\n**可选。** 当前 node/mark 创建的 [prosemirror input rules][input-rules]。用于匹配用户的特定输入规则来做响应，例如输入```自动生成代码块。\n\n### commands?\n\n**可选。** 当前 node/mark 创建的 [prosemirror commands][commands]。用于定义命令来程序化的操作编辑器。\n\n### keymap?\n\n**可选。** 当前 node/mark 创建的 [prosemirror key map][key-map]。用于定义快捷键，将其绑定到对应的 command。\n\n### view?\n\n**可选。** 用于渲染当前 node/mark 的 [prosemirror node view][node-view]。用于为 node/mark 定义特殊的渲染逻辑。\n\n---\n\n> 你可以在官方仓库中找到更多例子，例如 [preset-commonmark][preset-commonmark] 和 [preset-gfm][preset-gfm]。\n>\n> 在实际开发中，我们推荐你使用 [@milkdown/utils][utils] 中的 `createNode` 和 `createMark` 方法，他们可以简化 node/mark 的定义。\n\n[schema]: https://prosemirror.net/docs/ref/#model.Schema\n[input-rules]: https://prosemirror.net/docs/ref/#inputrules.InputRule\n[key-map]: https://prosemirror.net/docs/ref/#keymap\n[node-view]: https://prosemirror.net/docs/ref/#view.NodeView\n[commands]: https://prosemirror.net/docs/guide/#commands\n[preset-commonmark]: https://github.com/Saul-Mirone/milkdown/tree/main/packages/preset-commonmark\n[preset-gfm]: https://github.com/Saul-Mirone/milkdown/tree/main/packages/preset-gfm\n[utils]: https://github.com/Saul-Mirone/milkdown/tree/main/packages/utils\n";
+var n=`# Node & Mark
+
+Node \u548C Mark \u662F\u4E24\u4E2A\u7ED3\u6784\uFF0C\u5B83\u4EEC\u88AB\u7528\u4E8E\u5B9A\u4E49 prosemirror \u7684 [Node](https://prosemirror.net/docs/ref/#model.Node) \u548C [Mark](https://prosemirror.net/docs/ref/#model.Mark).
+
+## \u6982\u89C8
+
+\u7528\u6237\u53EF\u4EE5\u7B80\u5355\u7684\u7528\u4EE5\u4E0B\u4EE3\u7801\u6765\u5B9A\u4E49\u4E00\u4E2A node\uFF1A
+
+\`\`\`typescript
+import { nodeFactory } from '@milkdown/core';
+// mark\u4E5F\u662F\u7C7B\u4F3C
+import { markFactory } from '@milkdown/core';
+
+const id = 'paragraph';
+const paragraph = nodeFactory({
+    id,
+    schema: {
+        content: 'inline*',
+        group: 'block',
+        parseDOM: [{ tag: 'p' }],
+        toDOM: () => ['p', { class: 'paragraph' }, 0],
+    },
+    parser: {
+        match: (node) => node.type === id,
+        runner: (state, node, type) => {
+            state.openNode(type).next(node.children).closeNode();
+        },
+    },
+    serializer: {
+        match: (node) => node.type.name === id,
+        runner: (state, node) => {
+            state.openNode('paragraph').next(node.content).closeNode();
+        },
+    },
+});
+\`\`\`
+
+---
+
+## \u5C5E\u6027
+
+node/mark \u6709 4 \u4E2A\u5FC5\u9009\u5C5E\u6027\u548C 3 \u4E2A\u53EF\u9009\u5C5E\u6027\u3002
+
+### id
+
+**\u5FC5\u987B\u3002** node/mark \u7684\u6807\u8BC6\u7B26\uFF0C\u4E5F\u4F1A\u88AB\u7528\u4E8E\u5F53\u4F5C [prosemirror schema][schema] \u7684 key\u3002
+
+### schema
+
+**\u5FC5\u987B\u3002** \u5F53\u524D node/mark \u7684 [prosemirror schema][schema] \u5B9A\u4E49\u3002
+
+### parser
+
+**\u5FC5\u987B\u3002** \u5F53\u524D node/mark \u7684 parser \u5B9A\u4E49\uFF0C\u7528\u4E8E\u89C4\u5B9A markdown \u88AB\u5982\u4F55\u8F6C\u6362\u4E3A\u76EE\u6807\u8282\u70B9\u3002
+
+### serializer
+
+**\u5FC5\u987B\u3002** \u5F53\u524D node/mark \u7684 serializer \u5B9A\u4E49\uFF0C\u7528\u4E8E\u89C4\u5B9A\u5F53\u524D\u8282\u70B9\u88AB\u5982\u4F55\u8F6C\u6362\u4E3A markdown\u3002
+
+### inputRules?
+
+**\u53EF\u9009\u3002** \u5F53\u524D node/mark \u521B\u5EFA\u7684 [prosemirror input rules][input-rules]\u3002\u7528\u4E8E\u5339\u914D\u7528\u6237\u7684\u7279\u5B9A\u8F93\u5165\u89C4\u5219\u6765\u505A\u54CD\u5E94\uFF0C\u4F8B\u5982\u8F93\u5165\`\`\`\u81EA\u52A8\u751F\u6210\u4EE3\u7801\u5757\u3002
+
+### commands?
+
+**\u53EF\u9009\u3002** \u5F53\u524D node/mark \u521B\u5EFA\u7684 [prosemirror commands][commands]\u3002\u7528\u4E8E\u5B9A\u4E49\u547D\u4EE4\u6765\u7A0B\u5E8F\u5316\u7684\u64CD\u4F5C\u7F16\u8F91\u5668\u3002
+
+### keymap?
+
+**\u53EF\u9009\u3002** \u5F53\u524D node/mark \u521B\u5EFA\u7684 [prosemirror key map][key-map]\u3002\u7528\u4E8E\u5B9A\u4E49\u5FEB\u6377\u952E\uFF0C\u5C06\u5176\u7ED1\u5B9A\u5230\u5BF9\u5E94\u7684 command\u3002
+
+### view?
+
+**\u53EF\u9009\u3002** \u7528\u4E8E\u6E32\u67D3\u5F53\u524D node/mark \u7684 [prosemirror node view][node-view]\u3002\u7528\u4E8E\u4E3A node/mark \u5B9A\u4E49\u7279\u6B8A\u7684\u6E32\u67D3\u903B\u8F91\u3002
+
+---
+
+> \u4F60\u53EF\u4EE5\u5728\u5B98\u65B9\u4ED3\u5E93\u4E2D\u627E\u5230\u66F4\u591A\u4F8B\u5B50\uFF0C\u4F8B\u5982 [preset-commonmark][preset-commonmark] \u548C [preset-gfm][preset-gfm]\u3002
+>
+> \u5728\u5B9E\u9645\u5F00\u53D1\u4E2D\uFF0C\u6211\u4EEC\u63A8\u8350\u4F60\u4F7F\u7528 [@milkdown/utils][utils] \u4E2D\u7684 \`createNode\` \u548C \`createMark\` \u65B9\u6CD5\uFF0C\u4ED6\u4EEC\u53EF\u4EE5\u7B80\u5316 node/mark \u7684\u5B9A\u4E49\u3002
+
+[schema]: https://prosemirror.net/docs/ref/#model.Schema
+[input-rules]: https://prosemirror.net/docs/ref/#inputrules.InputRule
+[key-map]: https://prosemirror.net/docs/ref/#keymap
+[node-view]: https://prosemirror.net/docs/ref/#view.NodeView
+[commands]: https://prosemirror.net/docs/guide/#commands
+[preset-commonmark]: https://github.com/Saul-Mirone/milkdown/tree/main/packages/preset-commonmark
+[preset-gfm]: https://github.com/Saul-Mirone/milkdown/tree/main/packages/preset-gfm
+[utils]: https://github.com/Saul-Mirone/milkdown/tree/main/packages/utils
+`;export{n as default};

@@ -1,1 +1,43 @@
-export default"# 集成插件\n\n我们提供了一些方法来让用户将已有的 prosemirror 和 remark 插件快速集成到 milkdown 中。\n\n---\n\n## Remark 插件\n\n用于添加 remark 插件。\n\n```typescript\nimport { remarkPluginFactory } from '@milkdown/core';\n\n// 等同于\n// remark.use(someRemarkPlugin);\nconst remarkPlugin = remarkPluginFactory(someRemarkPlugin);\n\n// 多个\nconst remarkPlugin = remarkPluginFactory([someRemarkPlugin, someOtherRemarkPlugin]);\n\n// 使用\nmilkdown.use(remarkPlugin);\n```\n\n---\n\n## Prosemirror 插件\n\n用于添加 prosemirror 插件。\n\n```typescript\nimport { prosePluginFactory } from '@milkdown/core';\n\n// 等同于\nconst prosePlugin = prosePluginFactory(someProsemirrorPlugin);\n\n// 多个\nconst prosePlugin = prosePluginFactory([someProsePlugin, someOtherProsePlugin]);\n\n// 使用\nmilkdown.use(prosePlugin);\n```\n";
+var n=`# \u96C6\u6210\u63D2\u4EF6
+
+\u6211\u4EEC\u63D0\u4F9B\u4E86\u4E00\u4E9B\u65B9\u6CD5\u6765\u8BA9\u7528\u6237\u5C06\u5DF2\u6709\u7684 prosemirror \u548C remark \u63D2\u4EF6\u5FEB\u901F\u96C6\u6210\u5230 milkdown \u4E2D\u3002
+
+---
+
+## Remark \u63D2\u4EF6
+
+\u7528\u4E8E\u6DFB\u52A0 remark \u63D2\u4EF6\u3002
+
+\`\`\`typescript
+import { remarkPluginFactory } from '@milkdown/core';
+
+// \u7B49\u540C\u4E8E
+// remark.use(someRemarkPlugin);
+const remarkPlugin = remarkPluginFactory(someRemarkPlugin);
+
+// \u591A\u4E2A
+const remarkPlugin = remarkPluginFactory([someRemarkPlugin, someOtherRemarkPlugin]);
+
+// \u4F7F\u7528
+milkdown.use(remarkPlugin);
+\`\`\`
+
+---
+
+## Prosemirror \u63D2\u4EF6
+
+\u7528\u4E8E\u6DFB\u52A0 prosemirror \u63D2\u4EF6\u3002
+
+\`\`\`typescript
+import { prosePluginFactory } from '@milkdown/core';
+
+// \u7B49\u540C\u4E8E
+const prosePlugin = prosePluginFactory(someProsemirrorPlugin);
+
+// \u591A\u4E2A
+const prosePlugin = prosePluginFactory([someProsePlugin, someOtherProsePlugin]);
+
+// \u4F7F\u7528
+milkdown.use(prosePlugin);
+\`\`\`
+`;export{n as default};

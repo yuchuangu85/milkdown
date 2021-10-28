@@ -1,1 +1,52 @@
-export default"# Angular\n\nWe don't provide Angular support out of box, but you can use the vanilla version with it easily.\n\n## Install the Dependencies\n\n```bash\n# install with npm\nnpm install @milkdown/core @milkdown/preset-commonmark @milkdown/theme-nord\n```\n\n## Create a Component\n\nCreate a component is pretty easy.\n\n```html\n\x3c!-- editor.component.html --\x3e\n<div #editorRef></div>\n```\n\n```typescript\n// editor.component.ts\nimport { Component, ElementRef, ViewChild } from '@angular/core';\nimport { defaultValueCtx, Editor, rootCtx } from '@milkdown/core';\nimport { commonmark } from '@milkdown/preset-commonmark';\nimport { nord } from '@milkdown/theme-nord';\n\n@Component({\n    templateUrl: './editor.component.html',\n})\nexport class AppComponent {\n    @ViewChild('editorRef') editorRef: ElementRef;\n\n    defaultValue = '# Milkdown x Angular';\n\n    ngAfterViewInit() {\n        Editor.make()\n            .config((ctx) => {\n                ctx.set(rootCtx, this.editorRef.nativeElement);\n                ctx.set(defaultValueCtx, this.defaultValue);\n            })\n            .use(nord)\n            .use(commonmark)\n            .create();\n    }\n}\n```\n\n### Online Demo\n\n!CodeSandBox{milkdown-angular-setup-wowuy?fontsize=14&hidenavigation=1&theme=dark&view=preview}\n";
+var n=`# Angular
+
+We don't provide Angular support out of box, but you can use the vanilla version with it easily.
+
+## Install the Dependencies
+
+\`\`\`bash
+# install with npm
+npm install @milkdown/core @milkdown/preset-commonmark @milkdown/theme-nord
+\`\`\`
+
+## Create a Component
+
+Create a component is pretty easy.
+
+\`\`\`html
+<!-- editor.component.html -->
+<div #editorRef></div>
+\`\`\`
+
+\`\`\`typescript
+// editor.component.ts
+import { Component, ElementRef, ViewChild } from '@angular/core';
+import { defaultValueCtx, Editor, rootCtx } from '@milkdown/core';
+import { commonmark } from '@milkdown/preset-commonmark';
+import { nord } from '@milkdown/theme-nord';
+
+@Component({
+    templateUrl: './editor.component.html',
+})
+export class AppComponent {
+    @ViewChild('editorRef') editorRef: ElementRef;
+
+    defaultValue = '# Milkdown x Angular';
+
+    ngAfterViewInit() {
+        Editor.make()
+            .config((ctx) => {
+                ctx.set(rootCtx, this.editorRef.nativeElement);
+                ctx.set(defaultValueCtx, this.defaultValue);
+            })
+            .use(nord)
+            .use(commonmark)
+            .create();
+    }
+}
+\`\`\`
+
+### Online Demo
+
+!CodeSandBox{milkdown-angular-setup-wowuy?fontsize=14&hidenavigation=1&theme=dark&view=preview}
+`;export{n as default};

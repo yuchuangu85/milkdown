@@ -1,1 +1,49 @@
-export default"# Vue2\n\n我们不提供开箱即用的 Vue2 支持，但你可以在 Vue2 中轻松使用香草版本。\n\n## 依赖安装\n\n```bash\n# install with npm\nnpm install @milkdown/core @milkdown/preset-commonmark @milkdown/theme-nord\n```\n\n## 创建一个组件\n\n创建一个组件十分简单。\n\n```html\n<template>\n    <div ref=\"editor\"></div>\n</template>\n\n<script>\n    import { defaultValueCtx, Editor, rootCtx } from '@milkdown/core';\n    import { nord } from '@milkdown/theme-nord';\n    import { commonmark } from '@milkdown/preset-commonmark';\n    export default {\n        name: 'Editor',\n        props: {\n            msg: String,\n        },\n        mounted() {\n            Editor.make()\n                .config((ctx) => {\n                    ctx.set(rootCtx, this.$refs.editor);\n                    ctx.set(defaultValueCtx, this.$props.msg);\n                })\n                .use(nord)\n                .use(commonmark)\n                .create();\n        },\n    };\n<\/script>\n\n<style></style>\n```\n\n### 在线示例\n\n!CodeSandBox{milkdown-vue2-setup-t0cg0?fontsize=14&hidenavigation=1&theme=dark&view=preview}\n";
+var n=`# Vue2
+
+\u6211\u4EEC\u4E0D\u63D0\u4F9B\u5F00\u7BB1\u5373\u7528\u7684 Vue2 \u652F\u6301\uFF0C\u4F46\u4F60\u53EF\u4EE5\u5728 Vue2 \u4E2D\u8F7B\u677E\u4F7F\u7528\u9999\u8349\u7248\u672C\u3002
+
+## \u4F9D\u8D56\u5B89\u88C5
+
+\`\`\`bash
+# install with npm
+npm install @milkdown/core @milkdown/preset-commonmark @milkdown/theme-nord
+\`\`\`
+
+## \u521B\u5EFA\u4E00\u4E2A\u7EC4\u4EF6
+
+\u521B\u5EFA\u4E00\u4E2A\u7EC4\u4EF6\u5341\u5206\u7B80\u5355\u3002
+
+\`\`\`html
+<template>
+    <div ref="editor"></div>
+</template>
+
+<script>
+    import { defaultValueCtx, Editor, rootCtx } from '@milkdown/core';
+    import { nord } from '@milkdown/theme-nord';
+    import { commonmark } from '@milkdown/preset-commonmark';
+    export default {
+        name: 'Editor',
+        props: {
+            msg: String,
+        },
+        mounted() {
+            Editor.make()
+                .config((ctx) => {
+                    ctx.set(rootCtx, this.$refs.editor);
+                    ctx.set(defaultValueCtx, this.$props.msg);
+                })
+                .use(nord)
+                .use(commonmark)
+                .create();
+        },
+    };
+<\/script>
+
+<style></style>
+\`\`\`
+
+### \u5728\u7EBF\u793A\u4F8B
+
+!CodeSandBox{milkdown-vue2-setup-t0cg0?fontsize=14&hidenavigation=1&theme=dark&view=preview}
+`;export{n as default};
