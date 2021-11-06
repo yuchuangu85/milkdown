@@ -216,37 +216,6 @@ Editor.use(
 );
 \`\`\`
 
-## \u7EE7\u627F
-
-\u6240\u6709\u88AB\u5DE5\u5382\u521B\u5EFA\u7684\u63D2\u4EF6\u90FD\u53EF\u4EE5\u88AB\u7EE7\u627F\u3002\u5982\u679C\u4F60\u60F3\u8981\u4FEE\u6539\u73B0\u6709\u63D2\u4EF6\u7684\u4E00\u4E9B\u884C\u4E3A\uFF0C\u7EE7\u627F\u6BD4\u5B8C\u5168\u91CD\u5199\u8981\u597D\u3002
-
-\`\`\`typescript
-import { heading } from '@milkdown/preset-commonmark';
-
-const customHeading = heading.extend((options, utils, original) => {
-    return {
-        ...original,
-        schema: customSchema,
-    };
-});
-\`\`\`
-
-\u8FD9\u91CC\u6211\u4EEC\u6709\u4E09\u4E2A\u53C2\u6570\uFF0C\`options\`\u548C\`utils\`\u5DF2\u7ECF\u4ECB\u7ECD\u8FC7\u4E86\u3002\`original\`\u662F\u6307\u88AB\u7EE7\u627F\u7684\u63D2\u4EF6\u3002
-\u8FD9\u4E2A\u51FD\u6570\u5E94\u8BE5\u8FD4\u56DE\u4E00\u4E2A\u65B0\u7684\u63D2\u4EF6\u3002
-
-\u4F60\u4E5F\u53EF\u4EE5\u901A\u8FC7\u7C7B\u578B\u53C2\u6570\u6765\u66F4\u6539\`options\`\u548C\`keys\`\u7684\u7C7B\u578B\u7B7E\u540D\u3002
-
-\`\`\`typescript
-import { heading } from '@milkdown/preset-commonmark';
-
-const customHeading = heading.extend<CustomKeys, CustomOptions>((options, utils, original) => {
-    return {
-        ...original,
-        schema: customSchema,
-    };
-});
-\`\`\`
-
 # AtomList
 
 \u5728\u771F\u5B9E\u4E16\u754C\u4E2D\uFF0C\u4E00\u4E2A\u5305\u7ECF\u5E38\u7531\u4E00\u7CFB\u5217 milkdown \u63D2\u4EF6\u7EC4\u6210\u3002
