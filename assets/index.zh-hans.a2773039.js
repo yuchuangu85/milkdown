@@ -6,12 +6,12 @@ var n=`# \u4F7F\u7528\u5DE5\u5177\u5305
 
 \u5DE5\u5177\u5305\u63D0\u4F9B\u4E86\u4E09\u4E2A\u5DE5\u5382\u51FD\u6570\uFF1A
 
--   _createProsePlugin_:
-    \u521B\u5EFA[prosemirror plugin](https://prosemirror.net/docs/ref/#state.Plugin_System).
+-   _createPlugin_:
+    \u521B\u5EFA\u901A\u7528\u63D2\u4EF6\u3002
 -   _createNode_:
-    \u521B\u5EFA[prosemirror node](https://prosemirror.net/docs/ref/#model.Node).
+    \u521B\u5EFA[prosemirror node](https://prosemirror.net/docs/ref/#model.Node)\u3002
 -   _createMark_:
-    \u521B\u5EFA[prosemirror mark](https://prosemirror.net/docs/ref/#model.Mark).
+    \u521B\u5EFA[prosemirror mark](https://prosemirror.net/docs/ref/#model.Mark)\u3002
 
 ## \u9009\u9879
 
@@ -19,28 +19,27 @@ var n=`# \u4F7F\u7528\u5DE5\u5177\u5305
 \u901A\u8FC7\u5DE5\u5177\u5305\u4E2D\u63D0\u4F9B\u7684\u5DE5\u5382\u51FD\u6570\uFF0C\u4F60\u53EF\u4EE5\u8F7B\u677E\u5B9E\u73B0\u5B83\uFF1A
 
 \`\`\`typescript
-import { createProsePlugin } from '@milkdown/utils';
-import { Plugin } from '@milkdown/prose';
+import { createPlugin } from '@milkdown/utils';
 
 type Options = {
     color: string;
 };
 
-export const myProsemirrorPlugin = createProsePlugin<Options>((options) => {
+export const myPlugin = createPlugin<Options>((utils, options) => {
     // \u6240\u6709\u7684\u9009\u9879\u90FD\u9700\u8981\u9ED8\u8BA4\u503C
     const color = options?.color ?? '#fff';
 
-    return new Plugin({
+    return {
         // ...\u5B9A\u4E49\u4F60\u7684\u63D2\u4EF6
-    });
+    };
 });
 
 // \u4F7F\u7528\uFF1A
 // \u9ED8\u8BA4
-Editor.use(myProsemirrorPlugin());
+Editor.use(myPlugin());
 
 // \u81EA\u5B9A\u4E49\u914D\u7F6E
-Editor.use(myProsemirrorPlugin({ color: '#000' }));
+Editor.use(myPlugin({ color: '#000' }));
 \`\`\`
 
 ## \u5DE5\u5177
@@ -55,15 +54,14 @@ Editor.use(myProsemirrorPlugin({ color: '#000' }));
 -   \u8BA9\u4F60\u7684\u6837\u5F0F\u81EA\u52A8\u9002\u914D**\u65E0\u5934\u6A21\u5F0F**\u3002
 
 \`\`\`typescript
-import { createProsePlugin } from '@milkdown/utils';
-import { Plugin } from '@milkdown/prose';
+import { createPlugin } from '@milkdown/utils';
 import { css } from '@emotion/css';
 
 type Options = {
     color: string;
 };
 
-export const myProsemirrorPlugin = createProsePlugin((_, utils) => {
+export const myPlugin = createProsePlugin((_, utils) => {
     const className = utils.getStyle((themeTool) => {
         const primaryColor = themeTool.palette('primary');
         const { shadow } = themeTool.mixin;
@@ -74,14 +72,14 @@ export const myProsemirrorPlugin = createProsePlugin((_, utils) => {
         \`;
     });
 
-    return new Plugin({
+    return {
         // ...\u5B9A\u4E49\u4F60\u7684\u63D2\u4EF6
-    });
+    };
 });
 
 // \u65E0\u5934\u6A21\u5F0F\uFF1A
 // \u5728\u65E0\u5934\u6A21\u5F0F\u4E2D\uFF0C\u901A\u8FC7\`getStyle\`\u521B\u5EFA\u7684\u6837\u5F0F\u90FD\u4F1A\u88AB\u6D88\u9664\u3002
-Editor.use(myProsemirrorPlugin({ headless: true }));
+Editor.use(myPlugin({ headless: true }));
 \`\`\`
 
 ### getClassName
@@ -102,6 +100,7 @@ export const myNode = createNode<Keys>((options, utils) => {
             group: 'block',
             parseDOM: [{ tag: 'div' }],
             toDOM: (node) => ['div', { class: utils.getClassName(node.attrs, id, style) }, 0],
+            // ...other props
         },
         // ...other props
     };
@@ -141,7 +140,7 @@ export const myProsemirrorPlugin = createProsePlugin((_, utils) => {
 
 ## \u547D\u4EE4\u548C\u5FEB\u6377\u952E
 
-\u5728**node \u548C mark**\u4E2D\uFF0C\u5B9A\u4E49\u547D\u4EE4\u548C\u5FEB\u6377\u952E\u4F1A\u66F4\u52A0\u7B80\u5355\u3002
+\u5728\u63D2\u4EF6\u5DE5\u5382\u4E2D\uFF0C\u5B9A\u4E49\u547D\u4EE4\u548C\u5FEB\u6377\u952E\u4F1A\u66F4\u52A0\u7B80\u5355\u3002
 
 \u4F8B\u5982\u5728\u6807\u9898\u8282\u70B9\u4E2D\uFF1A
 
@@ -168,6 +167,7 @@ export const heading = createNode<Keys>((_, utils) => {
             },
             parseDOM: [1, 2, 3].map((x) => ({ tag: \`h\${x}\`, attrs: { level: x } })),
             toDOM: (node) => [\`h\${node.attrs.level}\`, 0],
+            // ...some other props
         },
         // ...some other props
 
@@ -214,6 +214,35 @@ Editor.use(
         },
     }),
 );
+\`\`\`
+
+## \u7EE7\u627F
+
+\u6240\u6709\u88AB\u5DE5\u5382\u521B\u5EFA\u7684\u63D2\u4EF6\u90FD\u53EF\u4EE5\u88AB\u7EE7\u627F\u3002\u5982\u679C\u4F60\u60F3\u8981\u4FEE\u6539\u73B0\u6709\u63D2\u4EF6\u7684\u4E00\u4E9B\u884C\u4E3A\uFF0C\u7EE7\u627F\u6BD4\u5B8C\u5168\u91CD\u5199\u8981\u597D\u3002
+
+\`\`\`typescript
+import { heading } from '@milkdown/preset-commonmark';
+const customHeading = heading.extend((original, utils, options) => {
+    return {
+        ...original,
+        schema: customSchema,
+    };
+});
+\`\`\`
+
+\u8FD9\u91CC\u6211\u4EEC\u6709\u4E09\u4E2A\u53C2\u6570\uFF0C\`options\`\u548C\`utils\`\u5DF2\u7ECF\u4ECB\u7ECD\u8FC7\u4E86\u3002\`original\`\u662F\u6307\u88AB\u7EE7\u627F\u7684\u63D2\u4EF6\u3002
+\u8FD9\u4E2A\u51FD\u6570\u5E94\u8BE5\u8FD4\u56DE\u4E00\u4E2A\u65B0\u7684\u63D2\u4EF6\u3002
+
+\u4F60\u4E5F\u53EF\u4EE5\u901A\u8FC7\u7C7B\u578B\u53C2\u6570\u6765\u66F4\u6539\`options\`\u548C\`keys\`\u7684\u7C7B\u578B\u7B7E\u540D\u3002
+
+\`\`\`typescript
+import { heading } from '@milkdown/preset-commonmark';
+const customHeading = heading.extend<CustomKeys, CustomOptions>((original, utils, options) => {
+    return {
+        ...original,
+        schema: customSchema,
+    };
+});
 \`\`\`
 
 # AtomList
