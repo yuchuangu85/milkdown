@@ -7,32 +7,30 @@ Node \u548C Mark \u662F\u4E24\u4E2A\u7ED3\u6784\uFF0C\u5B83\u4EEC\u88AB\u7528\u4
 \u7528\u6237\u53EF\u4EE5\u7B80\u5355\u7684\u7528\u4EE5\u4E0B\u4EE3\u7801\u6765\u5B9A\u4E49\u4E00\u4E2A node\uFF1A
 
 \`\`\`typescript
-import { nodeFactory } from '@milkdown/core';
-// mark\u4E5F\u662F\u7C7B\u4F3C
-import { markFactory } from '@milkdown/core';
+import { createNode } from '@milkdown/utils';
 
 const id = 'paragraph';
-const paragraph = nodeFactory({
+const paragraph = createNode(() => ({
     id,
     schema: {
         content: 'inline*',
         group: 'block',
         parseDOM: [{ tag: 'p' }],
         toDOM: () => ['p', { class: 'paragraph' }, 0],
-    },
-    parser: {
-        match: (node) => node.type === id,
-        runner: (state, node, type) => {
-            state.openNode(type).next(node.children).closeNode();
+        parseMarkdown: {
+            match: (node) => node.type === id,
+            runner: (state, node, type) => {
+                state.openNode(type).next(node.children).closeNode();
+            },
+        },
+        toMarkdown: {
+            match: (node) => node.type.name === id,
+            runner: (state, node) => {
+                state.openNode('paragraph').next(node.content).closeNode();
+            },
         },
     },
-    serializer: {
-        match: (node) => node.type.name === id,
-        runner: (state, node) => {
-            state.openNode('paragraph').next(node.content).closeNode();
-        },
-    },
-});
+}));
 \`\`\`
 
 ---
@@ -49,11 +47,11 @@ node/mark \u6709 4 \u4E2A\u5FC5\u9009\u5C5E\u6027\u548C 3 \u4E2A\u53EF\u9009\u5C
 
 **\u5FC5\u987B\u3002** \u5F53\u524D node/mark \u7684 [prosemirror schema][schema] \u5B9A\u4E49\u3002
 
-### parser
+### parseMarkdown
 
 **\u5FC5\u987B\u3002** \u5F53\u524D node/mark \u7684 parser \u5B9A\u4E49\uFF0C\u7528\u4E8E\u89C4\u5B9A markdown \u88AB\u5982\u4F55\u8F6C\u6362\u4E3A\u76EE\u6807\u8282\u70B9\u3002
 
-### serializer
+### toMarkdown
 
 **\u5FC5\u987B\u3002** \u5F53\u524D node/mark \u7684 serializer \u5B9A\u4E49\uFF0C\u7528\u4E8E\u89C4\u5B9A\u5F53\u524D\u8282\u70B9\u88AB\u5982\u4F55\u8F6C\u6362\u4E3A markdown\u3002
 
@@ -65,7 +63,7 @@ node/mark \u6709 4 \u4E2A\u5FC5\u9009\u5C5E\u6027\u548C 3 \u4E2A\u53EF\u9009\u5C
 
 **\u53EF\u9009\u3002** \u5F53\u524D node/mark \u521B\u5EFA\u7684 [prosemirror commands][commands]\u3002\u7528\u4E8E\u5B9A\u4E49\u547D\u4EE4\u6765\u7A0B\u5E8F\u5316\u7684\u64CD\u4F5C\u7F16\u8F91\u5668\u3002
 
-### keymap?
+### shortcuts?
 
 **\u53EF\u9009\u3002** \u5F53\u524D node/mark \u521B\u5EFA\u7684 [prosemirror key map][key-map]\u3002\u7528\u4E8E\u5B9A\u4E49\u5FEB\u6377\u952E\uFF0C\u5C06\u5176\u7ED1\u5B9A\u5230\u5BF9\u5E94\u7684 command\u3002
 

@@ -15,17 +15,19 @@ var n=`# \u89E3\u6790\u5668
 \u5BF9\u4E8E\u6BCF\u4E00\u4E2A node/mark\uFF0C\u90FD\u9700\u8981\u5B9A\u4E49\u4E00\u4E2A\u89E3\u6790\u5668\u58F0\u660E\uFF0C\u5B83\u6709\u4EE5\u4E0B\u7ED3\u6784\uFF1A
 
 \`\`\`typescript
-import { nodeFactory } from '@milkdown/core';
+import { createNode } from '@milkdown/utils';
 
-const myNode = nodeFactory({
-    // other props...
-    parser: {
-        match: (node) => node.type === 'my-node',
-        runner: (state, node, type) => {
-            state.openNode(type).next(node.children).closeNode();
+const myNode = createNode(() => ({
+    schema: () => ({
+        // other props...
+        parseMarkdown: {
+            match: (node) => node.type === 'my-node',
+            runner: (state, node, type) => {
+                state.openNode(type).next(node.children).closeNode();
+            },
         },
-    },
-});
+    }),
+}));
 \`\`\`
 
 ## \u89E3\u6790\u5668\u58F0\u660E
