@@ -46,6 +46,17 @@ Milkdown \u6709\u8BB8\u591A\u5185\u7F6E\u63D2\u4EF6\uFF0C\u5B83\u4EEC\u63A7\u523
 -   \u5B9A\u65F6\u5668\uFF1A
     -   **SchemaReady**: \u63D2\u4EF6\u6267\u884C\u5B8C\u6BD5\u3002
 
+### Commands
+
+-   \u540D\u79F0\uFF1A**commands**
+-   \u4E0A\u4E0B\u6587\uFF1A
+    -   **commandsTimerCtx**: \u51B3\u5B9A\u52A0\u8F7D\u63D2\u4EF6\u7684\u65F6\u673A\u3002
+        \u9ED8\u8BA4\u503C\uFF1A
+        -   **SchemaReady**
+    -   **commandsCtx**: \u6CE8\u518C\u6216\u8FD0\u884C\u547D\u4EE4\u3002
+-   \u5B9A\u65F6\u5668\uFF1A
+    -   **CommandsReady**: \u63D2\u4EF6\u6267\u884C\u5B8C\u6BD5\u3002
+
 ### Parser
 
 -   \u540D\u79F0\uFF1A**parser**
