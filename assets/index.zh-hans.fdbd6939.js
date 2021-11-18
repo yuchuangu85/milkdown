@@ -26,10 +26,13 @@ var n=`# \u7F16\u5199\u8BED\u6CD5\u63D2\u4EF6
 \u6240\u4EE5\uFF0C\u6211\u4EEC\u9700\u8981\u7684\u53EA\u662F\u5B89\u88C5\u5B83\u5E76\u5C06\u5176\u8F6C\u6362\u4E3A\u4E00\u4E2A milkdown \u63D2\u4EF6\uFF1A
 
 \`\`\`typescript
-import { remarkPluginFactory } from '@milkdown/core';
+import { RemarkPlugin } from '@milkdown/core';
 import directive from 'remark-directive';
 
-const directiveRemarkPlugin = remarkPluginFactory(directive);
+const iframe = createNode(() => ({
+    // ...
+    remarkPlugins: () => [directive as RemarkPlugin],
+}));
 \`\`\`
 
 ## \u5B9A\u4E49 Schema
@@ -39,12 +42,12 @@ const directiveRemarkPlugin = remarkPluginFactory(directive);
 \u5E76\u4E14\u6709\u4E00\u4E2A\`src\`\u6807\u7B7E\u6765\u8FDE\u63A5\u5230\u76EE\u6807\u9875\u9762\u3002
 
 \`\`\`typescript
-import { nodeFactory } from '@milkdown/core';
+import { createNode } from '@milkdown/utils';
 
 const id = 'iframe';
-const iframe = nodeFactory({
+const iframe = createNode(() => ({
     id,
-    schema: {
+    schema: () => ({
         inline: true,
         attrs: {
             src: { default: null },
@@ -65,8 +68,8 @@ const iframe = nodeFactory({
             },
         ],
         toDOM: (node) => ['iframe', { ...node.attrs, class: 'iframe' }, 0],
-    },
-});
+    }),
+}));
 \`\`\`
 
 ## \u89E3\u6790\u5668
@@ -85,15 +88,15 @@ const AST = {
 \u6240\u4EE5\u6211\u4EEC\u53EF\u4EE5\u8F7B\u6613\u5199\u51FA\u5B83\u5BF9\u5E94\u7684\u89E3\u6790\u5668\u58F0\u660E\uFF1A
 
 \`\`\`typescript
-const iframe = nodeFactory({
+schema: () => ({
     // ...
-    parser: {
+    parseMarkdown: {
         match: (node) => node.type === 'textDirective' && node.name === 'iframe',
         runner: (state, node, type) => {
             state.addNode(type, { src: (node.attributes as { src: string }).src });
         },
     },
-});
+}),
 \`\`\`
 
 \u73B0\u5728\uFF0C\`defaultValue\` \u4E2D\u7684\u6587\u672C\u53EF\u4EE5\u88AB\u6B63\u786E\u7684\u89E3\u6790\u4E3A iframe \u5143\u7D20\u4E86\u3002
@@ -103,9 +106,9 @@ const iframe = nodeFactory({
 \u63A5\u7740\uFF0C\u6211\u4EEC\u9700\u8981\u6DFB\u52A0\u5E8F\u5217\u5316\u5668\u6765\u5C06 prosemirror \u8282\u70B9\u8F6C\u56DE\u4E3A remark AST\u3002
 
 \`\`\`typescript
-const iframe = nodeFactory({
+schema: () => ({
     // ...
-    serializer: {
+    toMarkdown: {
         match: (node) => node.type.name === id,
         runner: (state, node) => {
             state.addNode('textDirective', undefined, undefined, {
@@ -115,8 +118,8 @@ const iframe = nodeFactory({
                 },
             });
         },
-    },
-});
+    }
+},
 \`\`\`
 
 \u73B0\u5728\uFF0Ciframe \u5143\u7D20\u53EF\u4EE5\u88AB\u6B63\u786E\u7684\u5E8F\u5217\u5316\u6210 markdown \u5B57\u7B26\u4E32\u4E86\u3002
@@ -127,13 +130,12 @@ const iframe = nodeFactory({
 \u6211\u4EEC\u53EF\u4EE5\u4F7F\u7528 \`inputRules\` \u6765\u5B9A\u4E49 [prosemirror \u7528\u6237\u8F93\u5165](https://prosemirror.net/docs/ref/#inputrules) \u6765\u5B9E\u73B0\u8FD9\u4E2A\u529F\u80FD\uFF1A
 
 \`\`\`typescript
-import { Node } from '@milkdown/core';
 import { InputRule } from 'prosemirror-inputrules';
 
-const iframe = nodeFactory({
+const iframe = createNode(() => ({
     // ...
     inputRules: (nodeType) => [
-        new InputRule(/:iframe\\{src="(?<src>[^"]+)?"?\\}/, (state, match, start, end) => {
+        new InputRule(/:iframe\\{src\\="(?<src>[^"]+)?"?\\}/, (state, match, start, end) => {
             const [okay, src = ''] = match;
             const { tr } = state;
             if (okay) {
@@ -143,7 +145,7 @@ const iframe = nodeFactory({
             return tr;
         }),
     ],
-});
+}));
 \`\`\`
 
 ## \u4F7F\u7528\u63D2\u4EF6
@@ -152,9 +154,14 @@ const iframe = nodeFactory({
 
 \`\`\`typescript
 import { Editor } from '@milkdown/core';
+import { AtomList, createNode } from "@milkdown/utils";
 import { commonmark } from '@milkdown/preset-commonmark';
 
-Editor.make().use([directiveRemarkPlugin, iframe]).use(commonmark).create();
+const iframe = createNode(() => ({ /* ... */ });
+
+const iframePlugin = AtomList.create([iframe()]);
+
+Editor.make().use(iframePlugin).use(commonmark).create();
 \`\`\`
 
 ---
