@@ -431,6 +431,6 @@ const myNodeView = $view(myNode, (ctx) => {
 
 After created by \`$view\`, the view has metadata on it:
 
--   type: The original $node or $mark for the view.
+-   type: The original \`$node\` or \`$mark\` for the view that passed in as the first parameter.
 -   view: The original view.
 `;export{n as default};

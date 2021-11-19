@@ -289,4 +289,149 @@ Editor.use(mySyntaxPlugin.remove(node1));
 const myNode1 = createNode(/* ... */);
 Editor.use(mySyntaxPlugin.replace(node1, myNode1));
 \`\`\`
+
+# \u53EF\u7EC4\u5408\u63D2\u4EF6
+
+\u6709\u65F6\u7528\u6237\u4E0D\u60F3\u63D0\u4F9B\u4E00\u4E2A\u5B8C\u6574\u7684\u63D2\u4EF6\uFF0C\u800C\u662F\u53EA\u63D0\u4F9B\u4E00\u90E8\u5206\u3002
+\u6216\u8005\u4ED6\u4EEC\u60F3\u5C06\u4E00\u4E2A\u63D2\u4EF6\u4E0E\u5176\u4ED6\u63D2\u4EF6\u7EC4\u5408\u3002
+\u5728\u8FD9\u4E2A\u65F6\u5019\uFF0C\u6211\u4EEC\u53EF\u4EE5\u4F7F\u7528\u53EF\u7EC4\u5408\u63D2\u4EF6\u3002
+
+## Remark Plugin
+
+\`\`\`typescript
+import { $remark } from '@milkdown/utils';
+
+const myRemarkPlugin = $remark((ctx) => remarkPlugin);
+
+Editor.use(myRemarkPlugin);
+\`\`\`
+
+## Node & Mark
+
+\`\`\`typescript
+import { $node } from '@milkdown/utils';
+
+const myNode = $node('my-node', (ctx) => {
+    return {
+        atom: true,
+        toDOM: () => ['my-node'],
+        parseDOM: [{ tag: 'my-node' }],
+        toMarkdown: {
+            //...
+        },
+        parseMarkdown: {
+            //...
+        },
+    };
+});
+
+Editor.use(myNode);
+\`\`\`
+
+\`$nodes\`\u548C\`$marks\`\u521B\u5EFA\u7684\u63D2\u4EF6\u6709\u5143\u6570\u636E\uFF1A
+
+-   id\uFF1Anode \u6216 mark \u7684 id\u3002
+-   type\uFF1Aprosemirror node \u6216 mark \u7684\u7C7B\u578B\u3002
+-   schema\uFF1Anode \u6216 mark \u7684\u539F\u59CB schema\u3002
+
+## InputRule
+
+\`\`\`typescript
+import { $inputRule } from '@milkdown/utils';
+import { schemaCtx } from '@milkdown/core';
+import { wrappingInputRule } from '@milkdown/prose';
+
+const myNode = $node(/* ... */);
+
+const inputRule1 = $inputRule((ctx) => {
+    return wrappingInputRule(/^\\[my-node\\]/, myNode.type);
+});
+
+const inputRule2 = $inputRule((ctx) => {
+    return wrappingInputRule(/^\\[my-node\\]/, ctx.get(schemaCtx).nodes['my-node'].type);
+});
+\`\`\`
+
+\u5728\u88AB\`$inputRule\`\u521B\u5EFA\u540E\uFF0C\u8F93\u5165\u89C4\u5219\u6709\u5143\u6570\u636E\uFF1A
+
+-   inputRule\uFF1A\u539F\u59CB\u8F93\u5165\u89C4\u5219\u3002
+
+## Command
+
+\`\`\`typescript
+import { $command } from '@milkdown/utils';
+import { createCmd, createCmdKey } from '@milkdown/core';
+import { wrapIn } from '@milkdown/prose';
+
+const myNode = $node(/* ... */);
+
+export const WrapInMyBlock = createCmdKey<number>();
+
+const myCommand = $command((ctx) => {
+    return createCmd(WrapInMyBlock, (level = 1) => wrapIn(myNode.type, level));
+});
+\`\`\`
+
+\u5728\u88AB\`$command\`\u521B\u5EFA\u540E\uFF0C\u547D\u4EE4\u6709\u5143\u6570\u636E\uFF1A
+
+-   run\uFF1A\u8FD0\u884C\u521B\u5EFA\u7684\u547D\u4EE4\u3002
+    \u4F8B\u5982\uFF1A\`myCommand.run(1)\`\u5C06\u9009\u4E2D\u7684\u5185\u5BB9\u5305\u88F9\u5728\`myNode.type\`\uFF0C\u7B49\u7EA7\u4E3A 1\u3002
+-   key: The key of the command.
+-   key\uFF1A\u547D\u4EE4\u7684 key\u3002
+    \u4F8B\u5982\uFF1A\`myCommand.key\`\u5C06\u4F1A\u8FD4\u56DE\`WrapInMyBlock\`\u3002
+
+## Shortcut
+
+\`\`\`typescript
+import { $shortcut } from '@milkdown/utils';
+
+const myCommand = $command(/* ... */);
+
+const myShortcut = $shortcut((ctx) => {
+    return {
+        'Mod-Alt-1': () => myCommand.run(1),
+        'Mod-Alt-2': () => myCommand.run(2),
+    };
+});
+\`\`\`
+
+\u5728\u88AB\`$shortcut\`\u521B\u5EFA\u540E\uFF0C\u5FEB\u6377\u952E\u6709\u5143\u6570\u636E\uFF1A
+
+-   keymap\uFF1A\u521B\u5EFA\u7684 keymap\u3002
+
+## Prosemirror Plugin
+
+\`\`\`typescript
+import { $prose } from '@milkdown/utils';
+import { Plugin } from '@milkdown/prose';
+
+const myProsePlugin = $prose((ctx) => {
+    return new Plugin({
+        //...
+    });
+});
+\`\`\`
+
+\u5728\u88AB\`$prose\`\u521B\u5EFA\u540E\uFF0Cprosemirror \u63D2\u4EF6\u6709\u5143\u6570\u636E\uFF1A
+
+-   plugin\uFF1A\u539F\u59CB prosemirror \u63D2\u4EF6\u3002
+
+## View
+
+\`\`\`typescript
+import { $view } from '@milkdown/utils';
+
+const myNode = $node(/* ... */);
+
+const myNodeView = $view(myNode, (ctx) => {
+    return (node, view, getPos, decorations) => {
+        return nodeViewImpl;
+    };
+});
+\`\`\`
+
+\u5728\u88AB\`$view\`\u521B\u5EFA\u540E\uFF0Cview \u6709\u5143\u6570\u636E\uFF1A
+
+-   type\uFF1A\u4F5C\u4E3A\u7B2C\u4E00\u4E2A\u53C2\u6570\u4F20\u5165 view \u7684\u539F\u59CB\`$node\`\u6216\`$mark\`\u6570\u636E\u3002
+-   view\uFF1A\u539F\u59CB view\u3002
 `;export{n as default};
