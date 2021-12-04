@@ -3110,7 +3110,6 @@ M500 241 v40 H399408 v-40z M500 435 v40 H400000 v-40z`},vt=function(){function l
         `),n=document.createElement("div");return t&&n.classList.add(t),n},hCe=(e,t,n,r)=>{const i=e.getStyle(y=>Lr`
             width: 12.375rem;
             flex-shrink: 0;
-            position: relative;
             cursor: pointer;
             font-weight: 500;
             font-size: 0.875rem;
@@ -3123,7 +3122,6 @@ M500 241 v40 H399408 v-40z M500 435 v40 H400000 v-40z`},vt=function(){function l
                 align-items: center;
                 color: ${y.palette("neutral",.87)};
                 display: flex;
-                position: relative;
                 padding: 0.25rem 0.5rem;
                 margin: 0.5rem;
                 background: ${y.palette("secondary",.12)};
@@ -3136,10 +3134,9 @@ M500 241 v40 H399408 v-40z M500 435 v40 H400000 v-40z`},vt=function(){function l
             }
 
             .menu-selector-list {
+                width: calc(12.375rem);
                 position: absolute;
                 top: 3rem;
-                left: calc(${y.size.lineWidth} * -1);
-                right: calc(${y.size.lineWidth} * -1);
                 background: ${y.palette("surface")};
                 ${y.mixin.border()};
                 ${y.mixin.shadow()};
@@ -3168,14 +3165,16 @@ M500 241 v40 H399408 v-40z M500 435 v40 H400000 v-40z`},vt=function(){function l
                     display: none;
                 }
             }
-        `),a=document.createElement("div");a.classList.add("menu-selector-wrapper","fold");const s=document.createElement("div");s.classList.add("menu-selector","fold"),s.addEventListener("mousedown",y=>{y.preventDefault(),y.stopPropagation(),a.classList.toggle("fold")}),r.dom.addEventListener("mousedown",()=>{a.classList.add("fold")});const c=document.createElement("span");c.classList.add("menu-selector-value"),c.textContent=t.text;const d=e.themeTool.slots.icon("downArrow");a.appendChild(s),s.appendChild(c),s.appendChild(d);const p=document.createElement("div");return p.classList.add("menu-selector-list"),t.options.forEach(y=>{const v=document.createElement("div");v.dataset.id=y.id,v.textContent=y.text,v.classList.add("menu-selector-list-item"),p.appendChild(v)}),p.addEventListener("mousedown",y=>{const{target:v}=y;v instanceof HTMLDivElement&&v.dataset.id&&(n.get(go).call(...t.onSelect(v.dataset.id,r)),a.classList.add("fold"))}),a.appendChild(p),i&&a.classList.add(i),a};class pCe{constructor(t,n,r,i,a){this.utils=n,this.ctx=r,this.config=t.map(s=>s.map(c=>Object.assign(Object.assign({},c),{$:this.$create(c,a)}))).map((s,c)=>{if(c===t.length-1)return s;const d={type:"divider",group:s.map(p=>p.$)};return[...s,Object.assign(Object.assign({},d),{$:this.$create(d,a)})]}).flat(),this.config.forEach(s=>i.appendChild(s.$))}update(t){this.config.forEach(n=>{if(n.type==="button"){n.active&&(n.active(t)?n.$.classList.add("active"):n.$.classList.remove("active")),n.disabled&&(n.disabled(t)?n.$.classList.add("disabled"):n.$.classList.remove("disabled"));return}n.type==="select"&&n.disabled&&(n.disabled(t)?n.$.classList.add("disabled"):n.$.classList.remove("disabled")),n.type==="divider"&&(n.group.every(i=>i.classList.contains("disabled"))?n.$.classList.add("disabled"):n.$.classList.remove("disabled"))})}$create(t,n){const{utils:r,ctx:i}=this;switch(t.type){case"button":return dCe(r,t,i);case"select":return hCe(r,t,i,n);case"divider":return fCe(r);default:throw new Error}}}const mCe=(e,t)=>{const n=e.getStyle(d=>Lr`
+        `),a=document.createElement("div");a.classList.add("menu-selector-wrapper","fold");const s=document.createElement("div");s.classList.add("menu-selector","fold"),s.addEventListener("mousedown",y=>{y.preventDefault(),y.stopPropagation(),a.classList.toggle("fold"),p.style.left=`${a.getBoundingClientRect().left}px`}),r.dom.addEventListener("mousedown",()=>{a.classList.add("fold")});const c=document.createElement("span");c.classList.add("menu-selector-value"),c.textContent=t.text;const d=e.themeTool.slots.icon("downArrow");a.appendChild(s),s.appendChild(c),s.appendChild(d);const p=document.createElement("div");return p.classList.add("menu-selector-list"),t.options.forEach(y=>{const v=document.createElement("div");v.dataset.id=y.id,v.textContent=y.text,v.classList.add("menu-selector-list-item"),p.appendChild(v)}),p.addEventListener("mousedown",y=>{const{target:v}=y;v instanceof HTMLDivElement&&v.dataset.id&&(n.get(go).call(...t.onSelect(v.dataset.id,r)),a.classList.add("fold"))}),a.appendChild(p),i&&a.classList.add(i),a};class pCe{constructor(t,n,r,i,a){this.utils=n,this.ctx=r,this.config=t.map(s=>s.map(c=>Object.assign(Object.assign({},c),{$:this.$create(c,a)}))).map((s,c)=>{if(c===t.length-1)return s;const d={type:"divider",group:s.map(p=>p.$)};return[...s,Object.assign(Object.assign({},d),{$:this.$create(d,a)})]}).flat(),this.config.forEach(s=>i.appendChild(s.$))}update(t){this.config.forEach(n=>{if(n.type==="button"){n.active&&(n.active(t)?n.$.classList.add("active"):n.$.classList.remove("active")),n.disabled&&(n.disabled(t)?n.$.classList.add("disabled"):n.$.classList.remove("disabled"));return}n.type==="select"&&n.disabled&&(n.disabled(t)?n.$.classList.add("disabled"):n.$.classList.remove("disabled")),n.type==="divider"&&(n.group.every(i=>i.classList.contains("disabled"))?n.$.classList.add("disabled"):n.$.classList.remove("disabled"))})}$create(t,n){const{utils:r,ctx:i}=this;switch(t.type){case"button":return dCe(r,t,i);case"select":return hCe(r,t,i,n);case"divider":return fCe(r);default:throw new Error}}}const mCe=(e,t)=>{const n=e.getStyle(d=>Lr`
             ${d.mixin.scrollbar("y")};
         `),r=e.getStyle(d=>Lr`
             box-sizing: border-box;
             width: 100%;
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
             ${d.mixin.border()};
+            ${d.mixin.scrollbar("x")};
 
             .disabled {
                 display: none;
