@@ -1,11 +1,13 @@
 /* Copyright 2021, Milkdown by Mirone. */
 
 import { createCmdKey } from '@milkdown/core';
-import { prosemirrorHistory, Redo, Undo } from '@milkdown/plugin-history';
+import { Redo, Undo } from '@milkdown/plugin-history';
 import {
     InsertHr,
     InsertImage,
     InsertTable,
+    LiftListItem,
+    SinkListItem,
     ToggleBold,
     ToggleItalic,
     ToggleLink,
@@ -17,7 +19,17 @@ import {
     WrapInBulletList,
     WrapInOrderedList,
 } from '@milkdown/preset-gfm';
-import { EditorState, EditorView, MarkType, setBlockType, wrapIn } from '@milkdown/prose';
+import {
+    EditorState,
+    EditorView,
+    liftListItem,
+    MarkType,
+    redo,
+    setBlockType,
+    sinkListItem,
+    undo,
+    wrapIn,
+} from '@milkdown/prose';
 
 import { ButtonConfig } from './button';
 import { SelectConfig } from './select';
@@ -63,7 +75,7 @@ export const defaultConfig: Config = [
             icon: 'undo',
             key: Undo,
             disabled: (view) => {
-                return !prosemirrorHistory.undo(view.state);
+                return !undo(view.state);
             },
         },
         {
@@ -71,7 +83,7 @@ export const defaultConfig: Config = [
             icon: 'redo',
             key: Redo,
             disabled: (view) => {
-                return !prosemirrorHistory.redo(view.state);
+                return !redo(view.state);
             },
         },
     ],
@@ -121,6 +133,24 @@ export const defaultConfig: Config = [
             disabled: (view) => {
                 const { state } = view;
                 return !wrapIn(state.schema.nodes.task_list_item)(state);
+            },
+        },
+        {
+            type: 'button',
+            icon: 'liftList',
+            key: LiftListItem,
+            disabled: (view) => {
+                const { state } = view;
+                return !liftListItem(state.schema.nodes.list_item)(state);
+            },
+        },
+        {
+            type: 'button',
+            icon: 'sinkList',
+            key: SinkListItem,
+            disabled: (view) => {
+                const { state } = view;
+                return !sinkListItem(state.schema.nodes.list_item)(state);
             },
         },
     ],

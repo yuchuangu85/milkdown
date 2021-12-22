@@ -1,17 +1,23 @@
 {
     "name": "@milkdown/preset-gfm",
-    "version": "5.1.2",
-    "main": "lib/index.js",
-    "module": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "version": "5.3.0",
+    "main": "./lib/index.cjs.js",
+    "module": "./lib/index.es.js",
+    "types": "./lib/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./lib/index.es.js",
+            "require": "./lib/index.cjs.js"
+        }
+    },
     "sideEffects": false,
     "license": "MIT",
     "scripts": {
         "start": "vite",
-        "watch": "tsc -w",
+        "watch": "vite build --watch",
         "test": "jest",
         "tsc": "tsc --noEmit",
-        "build": "tsc"
+        "build": "vite build && tsc --emitDeclarationOnly"
     },
     "files": [
         "lib",
@@ -31,11 +37,12 @@
         "@milkdown/plugin-table": "workspace:*",
         "@milkdown/preset-commonmark": "workspace:*",
         "@milkdown/utils": "workspace:*",
-        "@types/prosemirror-schema-list": "^1.0.3",
-        "prosemirror-schema-list": "^1.1.4",
         "tslib": "^2.3.1"
     },
     "devDependencies": {
-        "concurrently": "^6.0.2"
+        "@milkdown/prose": "workspace:*",
+        "@milkdown/core": "workspace:*",
+        "@milkdown/utils": "workspace:*",
+        "@milkdown/design-system": "workspace:*"
     }
 }

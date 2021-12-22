@@ -1,8 +1,10 @@
 /* Copyright 2021, Milkdown by Mirone. */
+import { Ctx } from '@milkdown/core';
 import { Decoration, EditorView, Mark, Node } from '@milkdown/prose';
-import { defineComponent, Fragment, h, InjectionKey, provide, ref, watchEffect } from 'vue';
+import { defineComponent, h, InjectionKey, provide } from 'vue';
 
 export type NodeContext = {
+    ctx: Ctx;
     node: Node | Mark;
     view: EditorView;
     getPos: boolean | (() => number);
@@ -11,23 +13,25 @@ export type NodeContext = {
 
 export const nodeMetadata: InjectionKey<NodeContext> = Symbol();
 
-export const VueNodeContainer = defineComponent(({ node, view, getPos, decorations }: NodeContext, context) => {
-    provide(nodeMetadata, {
-        node,
-        view,
-        getPos,
-        decorations,
-    });
-    return () => <>{context.slots.default?.() ?? []}</>;
+export const VueNodeContainer = defineComponent<NodeContext>({
+    name: 'milkdown-node-container',
+    setup: ({ node, view, getPos, decorations, ctx }, context) => {
+        provide(nodeMetadata, {
+            ctx,
+            node,
+            view,
+            getPos,
+            decorations,
+        });
+        return () => <div data-view-container>{context.slots.default?.()}</div>;
+    },
 });
-VueNodeContainer.props = ['editor', 'node', 'view', 'getPos', 'decorations'];
+VueNodeContainer.props = ['ctx', 'editor', 'node', 'view', 'getPos', 'decorations'];
 
-export const Content = defineComponent((props: { dom?: HTMLElement }) => {
-    const containerRef = ref<HTMLDivElement | null>(null);
-    watchEffect(() => {
-        if (!props.dom || !containerRef.value) return;
-        containerRef.value.appendChild(props.dom);
-    });
-    return () => <div ref={containerRef} />;
+export const Content = defineComponent<{ isMark?: boolean }>({
+    name: 'milkdown-content',
+    setup: ({ isMark }) => {
+        return () => (isMark ? <span data-view-content /> : <div data-view-content />);
+    },
 });
-Content.props = ['dom'];
+Content.props = ['isMark'];

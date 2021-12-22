@@ -1,5 +1,82 @@
 # @milkdown/gh-pages
 
+## 5.3.0
+
+### Minor Changes
+
+-   ed679a03: Optimize vue and react renderer.
+
+### Patch Changes
+
+-   Updated dependencies [ed679a03]
+    -   @milkdown/core@5.3.0
+    -   @milkdown/ctx@5.3.0
+    -   @milkdown/design-system@5.3.0
+    -   @milkdown/exception@5.3.0
+    -   @milkdown/plugin-clipboard@5.3.0
+    -   @milkdown/plugin-collaborative@5.3.0
+    -   @milkdown/plugin-cursor@5.3.0
+    -   @milkdown/plugin-diagram@5.3.0
+    -   @milkdown/plugin-emoji@5.3.0
+    -   @milkdown/plugin-history@5.3.0
+    -   @milkdown/plugin-indent@5.3.0
+    -   @milkdown/plugin-listener@5.3.0
+    -   @milkdown/plugin-math@5.3.0
+    -   @milkdown/plugin-menu@5.3.0
+    -   @milkdown/plugin-prism@5.3.0
+    -   @milkdown/plugin-slash@5.3.0
+    -   @milkdown/plugin-table@5.3.0
+    -   @milkdown/plugin-tooltip@5.3.0
+    -   @milkdown/plugin-upload@5.3.0
+    -   @milkdown/preset-commonmark@5.3.0
+    -   @milkdown/preset-gfm@5.3.0
+    -   @milkdown/prose@5.3.0
+    -   @milkdown/react@5.3.0
+    -   @milkdown/theme-nord@5.3.0
+    -   @milkdown/transformer@5.3.0
+    -   @milkdown/utils@5.3.0
+    -   @milkdown/vue@5.3.0
+
+## 5.2.1
+
+### Patch Changes
+
+-   eb74e3b5: Add es and cjs bundle, fix bugs and improve ux
+-   Updated dependencies [eb74e3b5]
+    -   @milkdown/core@5.2.1
+    -   @milkdown/ctx@5.2.1
+    -   @milkdown/design-system@5.2.1
+    -   @milkdown/exception@5.2.1
+    -   @milkdown/plugin-clipboard@5.2.1
+    -   @milkdown/plugin-collaborative@5.2.1
+    -   @milkdown/plugin-cursor@5.2.1
+    -   @milkdown/plugin-diagram@5.2.1
+    -   @milkdown/plugin-emoji@5.2.1
+    -   @milkdown/plugin-history@5.2.1
+    -   @milkdown/plugin-indent@5.2.1
+    -   @milkdown/plugin-listener@5.2.1
+    -   @milkdown/plugin-math@5.2.1
+    -   @milkdown/plugin-menu@5.2.1
+    -   @milkdown/plugin-prism@5.2.1
+    -   @milkdown/plugin-slash@5.2.1
+    -   @milkdown/plugin-table@5.2.1
+    -   @milkdown/plugin-tooltip@5.2.1
+    -   @milkdown/plugin-upload@5.2.1
+    -   @milkdown/preset-commonmark@5.2.1
+    -   @milkdown/preset-gfm@5.2.1
+    -   @milkdown/prose@5.2.1
+    -   @milkdown/react@5.2.1
+    -   @milkdown/theme-nord@5.2.1
+    -   @milkdown/transformer@5.2.1
+    -   @milkdown/utils@5.2.1
+    -   @milkdown/vue@5.2.1
+
+## 5.2.0
+
+### Minor Changes
+
+-   42055660: Add menu plugin and lots of optimize.
+
 ## 5.1.2
 
 ### Patch Changes

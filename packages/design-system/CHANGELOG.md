@@ -1,5 +1,23 @@
 # @milkdown/design-system
 
+## 5.3.0
+
+### Minor Changes
+
+-   ed679a03: Optimize vue and react renderer.
+
+## 5.2.1
+
+### Patch Changes
+
+-   eb74e3b5: Add es and cjs bundle, fix bugs and improve ux
+
+## 5.2.0
+
+### Minor Changes
+
+-   42055660: Add menu plugin and lots of optimize.
+
 ## 5.1.2
 
 ### Patch Changes

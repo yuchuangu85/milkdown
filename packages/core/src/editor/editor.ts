@@ -34,6 +34,15 @@ export class Editor {
     };
 
     /**
+     * Get the ctx of the editor.
+     *
+     * @returns The ctx of the editor.
+     */
+    get ctx() {
+        return this.#ctx;
+    }
+
+    /**
      * Use one plugin or a list of plugins for current editor.
      *
      * @example

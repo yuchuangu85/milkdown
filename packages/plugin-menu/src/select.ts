@@ -24,9 +24,7 @@ export type SelectConfig<T = any> = {
 export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: EditorView) => {
     const selectStyle = utils.getStyle((themeTool) => {
         return css`
-            width: 12.375rem;
             flex-shrink: 0;
-            cursor: pointer;
             font-weight: 500;
             font-size: 0.875rem;
 
@@ -34,6 +32,11 @@ export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: Edito
             ${themeTool.mixin.border('left')};
 
             .menu-selector {
+                border: 0;
+                box-sizing: unset;
+                cursor: pointer;
+                font: inherit;
+                text-align: left;
                 justify-content: space-between;
                 align-items: center;
                 color: ${themeTool.palette('neutral', 0.87)};
@@ -41,6 +44,11 @@ export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: Edito
                 padding: 0.25rem 0.5rem;
                 margin: 0.5rem;
                 background: ${themeTool.palette('secondary', 0.12)};
+                width: 10.375rem;
+
+                &:disabled {
+                    display: none;
+                }
             }
 
             .menu-selector-value {
@@ -58,12 +66,21 @@ export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: Edito
                 ${themeTool.mixin.shadow()};
                 border-bottom-left-radius: ${themeTool.size.radius};
                 border-bottom-right-radius: ${themeTool.size.radius};
-                z-index: 1;
+                z-index: 3;
             }
 
             .menu-selector-list-item {
+                background-color: transparent;
+                border: 0;
+                cursor: pointer;
+                display: block;
+                font: inherit;
+                text-align: left;
                 padding: 0.75rem 1rem;
                 line-height: 1.5rem;
+                width: 100%;
+                color: ${themeTool.palette('neutral', 0.87)};
+
                 &:hover {
                     background: ${themeTool.palette('secondary', 0.12)};
                     color: ${themeTool.palette('primary')};
@@ -87,7 +104,8 @@ export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: Edito
     const selectorWrapper = document.createElement('div');
     selectorWrapper.classList.add('menu-selector-wrapper', 'fold');
 
-    const selector = document.createElement('div');
+    const selector = document.createElement('button');
+    selector.setAttribute('type', 'button');
     selector.classList.add('menu-selector', 'fold');
     selector.addEventListener('mousedown', (e) => {
         e.preventDefault();
@@ -97,7 +115,7 @@ export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: Edito
             selectorWrapper.getBoundingClientRect().left - view.dom.getBoundingClientRect().left
         }px`;
     });
-    view.dom.addEventListener('mousedown', () => {
+    view.dom.addEventListener('click', () => {
         selectorWrapper.classList.add('fold');
     });
 
@@ -106,6 +124,7 @@ export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: Edito
     selectorValue.textContent = config.text;
 
     const selectorButton = utils.themeTool.slots.icon('downArrow');
+    selectorButton.setAttribute('aria-hidden', 'true');
 
     selectorWrapper.appendChild(selector);
     selector.appendChild(selectorValue);
@@ -114,8 +133,8 @@ export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: Edito
     const selectorList = document.createElement('div');
     selectorList.classList.add('menu-selector-list');
     config.options.forEach((option) => {
-        const selectorListItem = document.createElement('div');
-
+        const selectorListItem = document.createElement('button');
+        selectorListItem.setAttribute('type', 'button');
         selectorListItem.dataset.id = option.id;
         selectorListItem.textContent = option.text;
         selectorListItem.classList.add('menu-selector-list-item');
@@ -124,7 +143,7 @@ export const select = (utils: Utils, config: SelectConfig, ctx: Ctx, view: Edito
 
     selectorList.addEventListener('mousedown', (e) => {
         const { target } = e;
-        if (target instanceof HTMLDivElement && target.dataset.id) {
+        if (target instanceof HTMLButtonElement && target.dataset.id) {
             ctx.get(commandsCtx).call(...config.onSelect(target.dataset.id, view));
             selectorWrapper.classList.add('fold');
         }
