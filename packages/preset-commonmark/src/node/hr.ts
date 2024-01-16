@@ -1,66 +1,88 @@
 /* Copyright 2021, Milkdown by Mirone. */
-import { css } from '@emotion/css';
-import { createCmd, createCmdKey, schemaCtx } from '@milkdown/core';
-import { InputRule, Selection } from '@milkdown/prose';
-import { createNode } from '@milkdown/utils';
+import { InputRule } from '@milkdown/prose/inputrules'
+import { Selection } from '@milkdown/prose/state'
+import { $command, $inputRule, $nodeAttr, $nodeSchema } from '@milkdown/utils'
+import { withMeta } from '../__internal__'
+import { paragraphSchema } from './paragraph'
 
-const id = 'hr';
-export const InsertHr = createCmdKey<string>();
-export const hr = createNode((utils) => {
-    const style = utils.getStyle(
-        (themeTool) => css`
-            height: ${themeTool.size.lineWidth};
-            background-color: ${themeTool.palette('line')};
-            border-width: 0;
-        `,
-    );
-    return {
-        id,
-        schema: () => ({
-            group: 'block',
-            parseDOM: [{ tag: 'hr' }],
-            toDOM: (node) => ['hr', { class: utils.getClassName(node.attrs, id, style) }],
-            parseMarkdown: {
-                match: ({ type }) => type === 'thematicBreak',
-                runner: (state, _, type) => {
-                    state.addNode(type);
-                },
-            },
-            toMarkdown: {
-                match: (node) => node.type.name === id,
-                runner: (state) => {
-                    state.addNode('thematicBreak');
-                },
-            },
-        }),
-        inputRules: (type) => [
-            new InputRule(/^(?:---|___\s|\*\*\*\s)$/, (state, match, start, end) => {
-                const { tr } = state;
+/// HTML attributes for the hr node.
+export const hrAttr = $nodeAttr('hr')
 
-                if (match[0]) {
-                    tr.replaceWith(start - 1, end, type.create());
-                }
+withMeta(hrAttr, {
+  displayName: 'Attr<hr>',
+  group: 'Hr',
+})
 
-                return tr;
-            }),
-        ],
-        commands: (type, ctx) => [
-            createCmd(InsertHr, () => (state, dispatch) => {
-                if (!dispatch) return true;
-                const { tr, selection } = state;
-                const from = selection.from;
-                const node = type.create();
-                if (!node) {
-                    return true;
-                }
-                const _tr = tr.replaceSelectionWith(node).insert(from, ctx.get(schemaCtx).node('paragraph'));
-                const sel = Selection.findFrom(_tr.doc.resolve(from), 1, true);
-                if (!sel) {
-                    return true;
-                }
-                dispatch(_tr.setSelection(sel).scrollIntoView());
-                return true;
-            }),
-        ],
-    };
-});
+/// Hr node schema.
+export const hrSchema = $nodeSchema('hr', ctx => ({
+  group: 'block',
+  parseDOM: [{ tag: 'hr' }],
+  toDOM: node => ['hr', ctx.get(hrAttr.key)(node)],
+  parseMarkdown: {
+    match: ({ type }) => type === 'thematicBreak',
+    runner: (state, _, type) => {
+      state.addNode(type)
+    },
+  },
+  toMarkdown: {
+    match: node => node.type.name === 'hr',
+    runner: (state) => {
+      state.addNode('thematicBreak')
+    },
+  },
+}))
+
+withMeta(hrSchema.node, {
+  displayName: 'NodeSchema<hr>',
+  group: 'Hr',
+})
+
+withMeta(hrSchema.ctx, {
+  displayName: 'NodeSchemaCtx<hr>',
+  group: 'Hr',
+})
+
+/// Input rule to insert a hr.
+/// For example, `---` will be converted to a hr.
+export const insertHrInputRule = $inputRule(ctx => new InputRule(
+  /^(?:---|___\s|\*\*\*\s)$/,
+  (state, match, start, end) => {
+    const { tr } = state
+
+    if (match[0])
+      tr.replaceWith(start - 1, end, hrSchema.type(ctx).create())
+
+    return tr
+  },
+))
+
+withMeta(insertHrInputRule, {
+  displayName: 'InputRule<insertHrInputRule>',
+  group: 'Hr',
+})
+
+/// Command to insert a hr.
+export const insertHrCommand = $command('InsertHr', ctx => () => (state, dispatch) => {
+  if (!dispatch)
+    return true
+
+  const paragraph = paragraphSchema.node.type(ctx).create()
+  const { tr, selection } = state
+  const { from } = selection
+  const node = hrSchema.type(ctx).create()
+  if (!node)
+    return true
+
+  const _tr = tr.replaceSelectionWith(node).insert(from, paragraph)
+  const sel = Selection.findFrom(_tr.doc.resolve(from), 1, true)
+  if (!sel)
+    return true
+
+  dispatch(_tr.setSelection(sel).scrollIntoView())
+  return true
+})
+
+withMeta(insertHrCommand, {
+  displayName: 'Command<insertHrCommand>',
+  group: 'Hr',
+})

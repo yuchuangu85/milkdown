@@ -1,79 +1,111 @@
 /* Copyright 2021, Milkdown by Mirone. */
-import { createCmd, createCmdKey } from '@milkdown/core';
-import { AddMarkStep, Plugin, PluginKey, ReplaceStep } from '@milkdown/prose';
-import { createNode, createShortcut } from '@milkdown/utils';
+import { commandsCtx } from '@milkdown/core'
+import { Selection, TextSelection } from '@milkdown/prose/state'
+import { $command, $nodeAttr, $nodeSchema, $useKeymap } from '@milkdown/utils'
+import { withMeta } from '../__internal__'
 
-import { SupportedKeys } from '../supported-keys';
+/// HTML attributes for the hardbreak node.
+///
+/// Default value:
+/// - `data-is-inline` - Whether the hardbreak is inline.
+export const hardbreakAttr = $nodeAttr('hardbreak', (node) => {
+  return {
+    'data-is-inline': node.attrs.isInline,
+  }
+})
 
-type Keys = SupportedKeys['HardBreak'];
+withMeta(hardbreakAttr, {
+  displayName: 'Attr<hardbreak>',
+  group: 'Hardbreak',
+})
 
-export const InsertHardbreak = createCmdKey();
+/// Hardbreak node schema.
+export const hardbreakSchema = $nodeSchema('hardbreak', ctx => ({
+  inline: true,
+  group: 'inline',
+  attrs: {
+    isInline: {
+      default: false,
+    },
+  },
+  selectable: false,
+  parseDOM: [{ tag: 'br' }],
+  toDOM: node => ['br', ctx.get(hardbreakAttr.key)(node)],
+  parseMarkdown: {
+    match: ({ type }) => type === 'break',
+    runner: (state, node, type) => {
+      state.addNode(type, { isInline: Boolean((node.data as (undefined | { isInline: boolean }))?.isInline) })
+    },
+  },
+  leafText: () => '\n',
+  toMarkdown: {
+    match: node => node.type.name === 'hardbreak',
+    runner: (state, node) => {
+      if (node.attrs.isInline)
+        state.addNode('text', undefined, '\n')
 
-export const hardbreak = createNode<Keys>((utils) => {
-    return {
-        id: 'hardbreak',
-        schema: () => ({
-            inline: true,
-            group: 'inline',
-            selectable: false,
-            parseDOM: [{ tag: 'br' }],
-            toDOM: (node) => ['br', { class: utils.getClassName(node.attrs, 'hardbreak') }],
-            parseMarkdown: {
-                match: ({ type }) => type === 'break',
-                runner: (state, _, type) => {
-                    state.addNode(type);
-                },
-            },
-            toMarkdown: {
-                match: (node) => node.type.name === 'hardbreak',
-                runner: (state) => {
-                    state.addNode('break');
-                },
-            },
-        }),
-        commands: (type) => [
-            createCmd(InsertHardbreak, () => (state, dispatch) => {
-                dispatch?.(state.tr.setMeta('hardbreak', true).replaceSelectionWith(type.create()).scrollIntoView());
-                return true;
-            }),
-        ],
-        shortcuts: {
-            [SupportedKeys.HardBreak]: createShortcut(InsertHardbreak, 'Shift-Enter'),
-        },
-        prosePlugins: (type) => [
-            new Plugin({
-                key: new PluginKey('hardbreak-marks'),
-                appendTransaction: (trs, _oldState, newState) => {
-                    if (!trs.length) return;
-                    const [tr] = trs;
+      else
+        state.addNode('break')
+    },
+  },
+}))
 
-                    const [step] = tr.steps;
+withMeta(hardbreakSchema.node, {
+  displayName: 'NodeSchema<hardbreak>',
+  group: 'Hardbreak',
+})
 
-                    const isInsertHr = tr.getMeta('hardbreak');
-                    if (isInsertHr) {
-                        if (!(step instanceof ReplaceStep)) {
-                            return;
-                        }
-                        const { from } = step as unknown as { from: number };
-                        return newState.tr.setNodeMarkup(from, type, undefined, []);
-                    }
+withMeta(hardbreakSchema.ctx, {
+  displayName: 'NodeSchemaCtx<hardbreak>',
+  group: 'Hardbreak',
+})
 
-                    const isAddMarkStep = step instanceof AddMarkStep;
-                    if (isAddMarkStep) {
-                        let _tr = newState.tr;
-                        const { from, to } = step as unknown as { from: number; to: number };
-                        newState.doc.nodesBetween(from, to, (node, pos) => {
-                            if (node.type === type) {
-                                _tr = _tr.setNodeMarkup(pos, type, undefined, []);
-                            }
-                        });
+/// Command to insert a hardbreak.
+export const insertHardbreakCommand = $command('InsertHardbreak', ctx => () => (state, dispatch) => {
+  const { selection, tr } = state
+  if (!(selection instanceof TextSelection))
+    return false
 
-                        return _tr;
-                    }
+  if (selection.empty) {
+    // Transform two successive hardbreak into a new line
+    const node = selection.$from.node()
+    if (node.childCount > 0 && node.lastChild?.type.name === 'hardbreak') {
+      dispatch?.(
+        tr
+          .replaceRangeWith(selection.to - 1, selection.to, state.schema.node('paragraph'))
+          .setSelection(Selection.near(tr.doc.resolve(selection.to)))
+          .scrollIntoView(),
+      )
+      return true
+    }
+  }
+  dispatch?.(tr.setMeta('hardbreak', true).replaceSelectionWith(hardbreakSchema.type(ctx).create()).scrollIntoView())
+  return true
+})
 
-                    return;
-                },
-            }),
-        ],
-    };
-});
+withMeta(insertHardbreakCommand, {
+  displayName: 'Command<insertHardbreakCommand>',
+  group: 'Hardbreak',
+})
+
+/// Keymap for the hardbreak node.
+/// - `Shift-Enter` - Insert a hardbreak.
+export const hardbreakKeymap = $useKeymap('hardbreakKeymap', {
+  InsertHardbreak: {
+    shortcuts: 'Shift-Enter',
+    command: (ctx) => {
+      const commands = ctx.get(commandsCtx)
+      return () => commands.call(insertHardbreakCommand.key)
+    },
+  },
+})
+
+withMeta(hardbreakKeymap.ctx, {
+  displayName: 'KeymapCtx<hardbreak>',
+  group: 'Hardbreak',
+})
+
+withMeta(hardbreakKeymap.shortcuts, {
+  displayName: 'Keymap<hardbreak>',
+  group: 'Hardbreak',
+})

@@ -1,59 +1,26 @@
 /* Copyright 2021, Milkdown by Mirone. */
-import { injectGlobal } from '@emotion/css';
-import { themeFactory } from '@milkdown/core';
+import type { Ctx } from '@milkdown/ctx'
+import { editorViewOptionsCtx } from '@milkdown/core'
+import clsx from 'clsx'
 
-import { code, typography } from './font';
-import { mixin } from './mixin';
-import { darkColor, lightColor } from './nord';
-import { override } from './override';
-import { slots } from './slots';
-import { view } from './view';
+import '@milkdown/prose/view/style/prosemirror.css'
+import '@milkdown/prose/tables/style/tables.css'
+import './style.css'
 
-export const font = {
-    typography,
-    code,
-};
+export function nord(ctx: Ctx): void {
+  ctx.update(editorViewOptionsCtx, (prev) => {
+    const prevClass = prev.attributes
 
-export const size = {
-    radius: '4px',
-    lineWidth: '1px',
-};
+    return ({
+      ...prev,
+      attributes: (state) => {
+        const attrs = typeof prevClass === 'function' ? prevClass(state) : prevClass
 
-export const nordLight = themeFactory({
-    font,
-    size,
-    color: lightColor,
-    mixin,
-    slots,
-    global: (themeTool) => {
-        const css = injectGlobal;
-        css`
-            ${view};
-            ${override(themeTool)}
-        `;
-    },
-});
-
-export const nordDark = themeFactory({
-    font,
-    size,
-    color: darkColor,
-    mixin,
-    slots,
-    global: (themeTool) => {
-        const css = injectGlobal;
-        css`
-            ${view};
-            ${override(themeTool)}
-        `;
-    },
-});
-
-const darkMode = Boolean(window.matchMedia?.('(prefers-color-scheme: dark)').matches);
-export const nord = darkMode ? nordDark : nordLight;
-
-export { mixin } from './mixin';
-export { color, darkColor, lightColor } from './nord';
-export { override } from './override';
-export { slots } from './slots';
-export { view } from './view';
+        return {
+          ...attrs,
+          class: clsx('prose dark:prose-invert outline-none', attrs?.class || '', 'milkdown-theme-nord'),
+        }
+      },
+    })
+  })
+}

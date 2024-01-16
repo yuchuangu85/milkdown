@@ -1,9 +1,4 @@
 /* Copyright 2021, Milkdown by Mirone. */
-import { defineConfig } from 'vite';
+import { pluginViteConfig } from '../../vite.config.mjs'
 
-import { viteBuild } from '../../vite.config.common';
-
-export default defineConfig({
-    root: 'app',
-    build: viteBuild('ctx'),
-});
+export default pluginViteConfig(import.meta.url)

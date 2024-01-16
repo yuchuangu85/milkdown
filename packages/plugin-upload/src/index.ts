@@ -1,9 +1,9 @@
 /* Copyright 2021, Milkdown by Mirone. */
-import { AtomList } from '@milkdown/utils';
+import type { MilkdownPlugin } from '@milkdown/ctx'
+import { uploadConfig, uploadPlugin } from './upload'
 
-import { uploadPlugin } from './upload';
+export * from './upload'
+export * from './default-uploader'
 
-export type { Uploader } from './upload';
-export { uploadPlugin } from './upload';
-
-export const upload = AtomList.create([uploadPlugin()]);
+/// All plugins exported by this package.
+export const upload: MilkdownPlugin[] = [uploadConfig, uploadPlugin]

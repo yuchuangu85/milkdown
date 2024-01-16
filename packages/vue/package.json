@@ -1,48 +1,81 @@
 {
-    "name": "@milkdown/vue",
-    "version": "5.3.0",
-    "main": "./lib/index.cjs.js",
-    "module": "./lib/index.es.js",
+  "name": "@milkdown/vue",
+  "type": "module",
+  "version": "7.3.3",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Milkdown/milkdown.git",
+    "directory": "packages/vue"
+  },
+  "keywords": [
+    "milkdown",
+    "milkdown plugin",
+    "vue"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "publishConfig": {
+    "main": "./lib/index.es.js",
     "types": "./lib/index.d.ts",
     "exports": {
-        ".": {
-            "import": "./lib/index.es.js",
-            "require": "./lib/index.cjs.js"
-        }
-    },
-    "sideEffects": false,
-    "license": "MIT",
-    "scripts": {
-        "start": "vite",
-        "watch": "vite build --watch",
-        "test": "jest",
-        "tsc": "tsc --noEmit",
-        "build": "vite build && tsc --emitDeclarationOnly"
-    },
-    "files": [
-        "lib",
-        "src"
-    ],
-    "keywords": [
-        "milkdown",
-        "milkdown plugin",
-        "vue"
-    ],
-    "dependencies": {
-        "@milkdown/utils": "workspace:*",
-        "nanoid": "^3.1.25",
-        "tslib": "^2.3.1"
-    },
-    "peerDependencies": {
-        "@milkdown/core": "*",
-        "vue": "^3.0.0"
-    },
-    "devDependencies": {
-        "@milkdown/core": "workspace:*",
-        "@milkdown/prose": "workspace:*",
-        "@milkdown/preset-commonmark": "workspace:*",
-        "@milkdown/plugin-slash": "workspace:*",
-        "@milkdown/theme-nord": "workspace:*",
-        "vue": "^3.0.0"
+      ".": {
+        "import": "./lib/index.es.js",
+        "types": "./lib/index.d.ts"
+      }
     }
+  },
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "start": "concurrently -n es,dts \"vite build --watch\"  \"tsc --emitDeclarationOnly --watch\"",
+    "test": "vitest",
+    "tsc": "tsc --noEmit && echo",
+    "build": "tsc --emitDeclarationOnly && vite build"
+  },
+  "peerDependencies": {
+    "@milkdown/core": "^7.2.0",
+    "@milkdown/prose": "^7.2.0",
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "@milkdown/utils": "workspace:*",
+    "tslib": "^2.5.0"
+  },
+  "devDependencies": {
+    "@milkdown/core": "workspace:*",
+    "@milkdown/prose": "workspace:*",
+    "vue": "^3.3.4"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": [
+          "{projectRoot}/lib"
+        ],
+        "dependsOn": [
+          {
+            "target": "build",
+            "projects": "dependencies"
+          }
+        ]
+      },
+      "tsc": {
+        "outputs": [],
+        "dependsOn": [
+          {
+            "target": "build",
+            "projects": "dependencies"
+          }
+        ]
+      }
+    }
+  }
 }

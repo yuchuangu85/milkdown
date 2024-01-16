@@ -1,51 +1,56 @@
 /* Copyright 2021, Milkdown by Mirone. */
-import { injectGlobal } from '@emotion/css';
-import { themeToolCtx } from '@milkdown/core';
-import { dropCursor, gapCursor } from '@milkdown/prose';
-import { createPlugin } from '@milkdown/utils';
+import type { Meta, MilkdownPlugin } from '@milkdown/ctx'
+import { dropCursor } from '@milkdown/prose/dropcursor'
+import { gapCursor } from '@milkdown/prose/gapcursor'
+import { $ctx, $prose } from '@milkdown/utils'
 
-export const cursor = createPlugin((utils) => {
-    const css = injectGlobal;
-    utils.getStyle((themeTool) => {
-        css`
-            /* copy from https://github.com/ProseMirror/prosemirror-gapcursor/blob/master/style/gapcursor.css */
-            .ProseMirror-gapcursor {
-                display: none;
-                pointer-events: none;
-                position: absolute;
-                margin: 0 !important;
-            }
+function withMeta<T extends MilkdownPlugin>(plugin: T, meta: Partial<Meta> & Pick<Meta, 'displayName'>): T {
+  Object.assign(plugin, {
+    meta: {
+      package: '@milkdown/plugin-cursor',
+      ...meta,
+    },
+  })
 
-            .ProseMirror-gapcursor:after {
-                content: '';
-                display: block;
-                position: absolute;
-                top: -2px;
-                width: 20px;
-                border-top: ${themeTool.size.lineWidth} solid ${themeTool.palette('secondary')};
-                animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;
-            }
+  return plugin
+}
 
-            @keyframes ProseMirror-cursor-blink {
-                to {
-                    visibility: hidden;
-                }
-            }
+/// @internal
+export interface DropCursorOptions {
+  /**
+    The color of the cursor. Defaults to `black`.
+   */
+  color?: string
+  /**
+    The precise width of the cursor in pixels. Defaults to 1.
+   */
+  width?: number
+  /**
+    A CSS class name to add to the cursor element.
+   */
+  class?: string
+}
 
-            .ProseMirror-focused .ProseMirror-gapcursor {
-                display: block;
-            }
-        `;
-    });
+/// A slice that contains [options for drop cursor](https://github.com/ProseMirror/prosemirror-dropcursor#documentation).
+export const dropCursorConfig = $ctx<DropCursorOptions, 'dropCursorConfig'>({}, 'dropCursorConfig')
 
-    return {
-        prosePlugins: (_, ctx) => {
-            const themeTool = ctx.get(themeToolCtx);
+withMeta(dropCursorConfig, {
+  displayName: 'Ctx<dropCursor>',
+})
 
-            const lineWidth = themeTool.size.lineWidth;
-            const width = Number(lineWidth?.match(/\d+/)?.[0] ?? 1);
+/// This plugin wraps [drop cursor](https://github.com/ProseMirror/prosemirror-dropcursor).
+export const dropCursorPlugin = $prose(ctx => dropCursor(ctx.get(dropCursorConfig.key)))
 
-            return [gapCursor(), dropCursor({ color: themeTool.palette('secondary'), width })];
-        },
-    };
-})();
+withMeta(dropCursorPlugin, {
+  displayName: 'Prose<dropCursor>',
+})
+
+/// This plugin wraps [gap cursor](https://github.com/ProseMirror/prosemirror-gapcursor).
+export const gapCursorPlugin = $prose(() => gapCursor())
+
+withMeta(gapCursorPlugin, {
+  displayName: 'Prose<gapCursor>',
+})
+
+/// All plugins exported by this package.
+export const cursor: MilkdownPlugin[] = [dropCursorConfig, dropCursorPlugin, gapCursorPlugin]

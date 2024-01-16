@@ -1,29 +1,11 @@
 # @milkdown/plugin-listener
 
-Listener plugin for [milkdown](https://saul-mirone.github.io/milkdown/).
+The listener plugin of [milkdown](https://milkdown.dev/).
 
-# Example Usage
+# Official Documentation
 
-```typescript
-import { Editor } from '@milkdown/core';
-import { commonmark } from '@milkdown/preset-commonmark';
-import { nord } from '@milkdown/theme-nord';
-
-import { listener, listenerCtx } from '@milkdown/plugin-listener';
-
-Editor.make()
-    .config((ctx) => {
-        ctx.set(listenerCtx, {
-            markdown: [(get) => console.log(get())],
-            doc: [console.log],
-        });
-    })
-    .use(nord)
-    .use(commonmark)
-    .use(listener)
-    .create();
-```
+Documentation can be found on the [Milkdown website](https://milkdown.dev/docs/api/plugin-listener).
 
 # License
 
-Milkdown is open sourced software licensed under [MIT license](https://github.com/Saul-Mirone/milkdown/blob/main/LICENSE).
+Milkdown is open sourced software licensed under [MIT license](https://github.com/Milkdown/milkdown/blob/main/LICENSE).

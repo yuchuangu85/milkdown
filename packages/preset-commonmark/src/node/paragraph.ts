@@ -1,56 +1,81 @@
 /* Copyright 2021, Milkdown by Mirone. */
-import { css } from '@emotion/css';
-import { createCmd, createCmdKey } from '@milkdown/core';
-import { setBlockType } from '@milkdown/prose';
-import { createNode, createShortcut } from '@milkdown/utils';
+import { commandsCtx } from '@milkdown/core'
+import { setBlockType } from '@milkdown/prose/commands'
+import { $command, $nodeAttr, $nodeSchema, $useKeymap } from '@milkdown/utils'
+import { serializeText, withMeta } from '../__internal__'
 
-import { SupportedKeys } from '../supported-keys';
+/// HTML attributes for paragraph node.
+export const paragraphAttr = $nodeAttr('paragraph')
 
-type Keys = SupportedKeys['Text'];
+withMeta(paragraphAttr, {
+  displayName: 'Attr<paragraph>',
+  group: 'Paragraph',
+})
 
-export const TurnIntoText = createCmdKey();
+/// Schema for paragraph node.
+export const paragraphSchema = $nodeSchema('paragraph', ctx => ({
+  content: 'inline*',
+  group: 'block',
+  parseDOM: [{ tag: 'p' }],
+  toDOM: node => ['p', ctx.get(paragraphAttr.key)(node), 0],
+  parseMarkdown: {
+    match: node => node.type === 'paragraph',
+    runner: (state, node, type) => {
+      state.openNode(type)
+      if (node.children)
+        state.next(node.children)
 
-const id = 'paragraph';
-export const paragraph = createNode<Keys>((utils, options) => {
-    const style = options?.headless
-        ? null
-        : css`
-              font-size: 1rem;
-              line-height: 1.5;
-              letter-spacing: 0.5px;
-          `;
+      else
+        state.addText((node.value || '') as string)
 
-    return {
-        id,
-        schema: () => ({
-            content: 'inline*',
-            group: 'block',
-            parseDOM: [{ tag: 'p' }],
-            toDOM: (node) => ['p', { class: utils.getClassName(node.attrs, id, style) }, 0],
-            parseMarkdown: {
-                match: (node) => node.type === 'paragraph',
-                runner: (state, node, type) => {
-                    state.openNode(type);
-                    if (node.children) {
-                        state.next(node.children);
-                    } else {
-                        state.addText(node.value as string);
-                    }
-                    state.closeNode();
-                },
-            },
-            toMarkdown: {
-                match: (node) => node.type.name === 'paragraph',
-                runner: (state, node) => {
-                    state.openNode('paragraph');
-                    state.next(node.content);
-                    state.closeNode();
-                },
-            },
-        }),
-        commands: (nodeType) => [createCmd(TurnIntoText, () => setBlockType(nodeType))],
-        shortcuts: {
-            [SupportedKeys.Text]: createShortcut(TurnIntoText, 'Mod-Alt-0'),
-        },
-    };
-});
+      state.closeNode()
+    },
+  },
+  toMarkdown: {
+    match: node => node.type.name === 'paragraph',
+    runner: (state, node) => {
+      state.openNode('paragraph')
+      serializeText(state, node)
+      state.closeNode()
+    },
+  },
+}))
+
+withMeta(paragraphSchema.node, {
+  displayName: 'NodeSchema<paragraph>',
+  group: 'Paragraph',
+})
+withMeta(paragraphSchema.ctx, {
+  displayName: 'NodeSchemaCtx<paragraph>',
+  group: 'Paragraph',
+})
+
+/// This command can turn the selected block into paragraph.
+export const turnIntoTextCommand = $command('TurnIntoText', ctx => () => setBlockType(paragraphSchema.type(ctx)))
+
+withMeta(turnIntoTextCommand, {
+  displayName: 'Command<turnIntoTextCommand>',
+  group: 'Paragraph',
+})
+
+/// Keymap for paragraph node.
+/// - `<Mod-Alt-0>`: Turn the selected block into paragraph.
+export const paragraphKeymap = $useKeymap('paragraphKeymap', {
+  TurnIntoText: {
+    shortcuts: 'Mod-Alt-0',
+    command: (ctx) => {
+      const commands = ctx.get(commandsCtx)
+      return () => commands.call(turnIntoTextCommand.key)
+    },
+  },
+})
+
+withMeta(paragraphKeymap.ctx, {
+  displayName: 'KeymapCtx<paragraph>',
+  group: 'Paragraph',
+})
+
+withMeta(paragraphKeymap.shortcuts, {
+  displayName: 'Keymap<paragraph>',
+  group: 'Paragraph',
+})

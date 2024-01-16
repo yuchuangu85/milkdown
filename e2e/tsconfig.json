@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "sourceMap": false
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "es2022",
+      "moduleResolution": "node"
+    }
+  }
+}

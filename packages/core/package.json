@@ -1,43 +1,88 @@
 {
-    "name": "@milkdown/core",
-    "version": "5.3.0",
-    "main": "./lib/index.cjs.js",
-    "module": "./lib/index.es.js",
+  "name": "@milkdown/core",
+  "type": "module",
+  "version": "7.3.3",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Milkdown/milkdown.git",
+    "directory": "packages/core"
+  },
+  "keywords": [
+    "milkdown",
+    "prosemirror",
+    "remark",
+    "markdown",
+    "wysiwyg",
+    "text editor",
+    "markdown editor"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "publishConfig": {
+    "main": "./lib/index.es.js",
     "types": "./lib/index.d.ts",
     "exports": {
-        ".": {
-            "import": "./lib/index.es.js",
-            "require": "./lib/index.cjs.js"
-        }
-    },
-    "sideEffects": false,
-    "license": "MIT",
-    "scripts": {
-        "watch": "vite build --watch",
-        "test": "jest",
-        "tsc": "tsc --noEmit",
-        "build": "vite build && tsc --emitDeclarationOnly"
-    },
-    "files": [
-        "lib",
-        "src"
-    ],
-    "keywords": [
-        "milkdown",
-        "prosemirror",
-        "remark",
-        "markdown",
-        "wysiwyg",
-        "text editor",
-        "markdown editor"
-    ],
-    "dependencies": {
-        "@milkdown/ctx": "workspace:*",
-        "@milkdown/transformer": "workspace:*",
-        "@milkdown/design-system": "workspace:*",
-        "@milkdown/exception": "workspace:*",
-        "@milkdown/prose": "workspace:*",
-        "remark": "^14.0.1",
-        "tslib": "^2.3.1"
+      ".": {
+        "import": "./lib/index.es.js",
+        "types": "./lib/index.d.ts"
+      }
     }
+  },
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "start": "concurrently -n es,dts \"vite build --watch\"  \"tsc --emitDeclarationOnly --watch\"",
+    "test": "vitest",
+    "tsc": "tsc --noEmit && echo",
+    "build": "tsc --emitDeclarationOnly && vite build"
+  },
+  "peerDependencies": {
+    "@milkdown/ctx": "^7.2.0",
+    "@milkdown/prose": "^7.2.0",
+    "@milkdown/transformer": "^7.2.0"
+  },
+  "dependencies": {
+    "@milkdown/exception": "workspace:*",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "tslib": "^2.5.0",
+    "unified": "^11.0.3"
+  },
+  "devDependencies": {
+    "@milkdown/ctx": "workspace:*",
+    "@milkdown/prose": "workspace:*",
+    "@milkdown/transformer": "workspace:*"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": [
+          "{projectRoot}/lib"
+        ],
+        "dependsOn": [
+          {
+            "target": "build",
+            "projects": "dependencies"
+          }
+        ]
+      },
+      "tsc": {
+        "outputs": [],
+        "dependsOn": [
+          {
+            "target": "build",
+            "projects": "dependencies"
+          }
+        ]
+      }
+    }
+  }
 }

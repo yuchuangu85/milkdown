@@ -1,35 +1,36 @@
 /* Copyright 2021, Milkdown by Mirone. */
 
-import { Node, Parent } from 'unist';
-import { visit } from 'unist-util-visit';
+import type { Node } from '@milkdown/transformer'
+import { visit } from 'unist-util-visit'
 
-const createMermaidDiv = (contents: string) => ({
+function createMermaidDiv(contents: string) {
+  return {
     type: 'diagram',
     value: contents,
-});
+  }
+}
 
-const visitCodeBlock = (ast: Node) =>
-    visit(ast, 'code', (node, index, parent: Parent) => {
-        const { lang, value } = node;
+function visitCodeBlock(ast: Node) {
+  return visit(ast, 'code', (node, index, parent: Node & { children: Node[] }) => {
+    const { lang, value } = node
 
-        // If this codeblock is not mermaid, bail.
-        if (lang !== 'mermaid') {
-            return node;
-        }
+    // If this codeblock is not mermaid, bail.
+    if (lang !== 'mermaid')
+      return node
 
-        const newNode = createMermaidDiv(value);
+    const newNode = createMermaidDiv(value)
 
-        if (parent && index) {
-            parent.children.splice(index, 1, newNode);
-        }
+    if (parent && index != null)
+      parent.children.splice(index, 1, newNode)
 
-        return node;
-    });
+    return node
+  })
+}
 
-export const remarkMermaid = () => {
-    function transformer(tree: Node) {
-        visitCodeBlock(tree);
-    }
+export function remarkMermaid() {
+  function transformer(tree: Node) {
+    visitCodeBlock(tree)
+  }
 
-    return transformer;
-};
+  return transformer
+}

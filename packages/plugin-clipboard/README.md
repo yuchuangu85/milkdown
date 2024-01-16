@@ -1,18 +1,11 @@
 # @milkdown/plugin-clipboard
 
-Markdown copy & paste support for [milkdown](https://saul-mirone.github.io/milkdown/).
+The clipboard plugin of [milkdown](https://milkdown.dev/).
 
-# Example Usage
+# Official Documentation
 
-```typescript
-import { Editor } from '@milkdown/core';
-import { commonmark } from '@milkdown/preset-commonmark';
-
-import { clipboard } from '@milkdown/plugin-clipboard';
-
-Editor.make().use(commonmark).use(clipboard).create();
-```
+Documentation can be found on the [Milkdown website](https://milkdown.dev/docs/api/plugin-clipboard).
 
 # License
 
-Milkdown is open sourced software licensed under [MIT license](https://github.com/Saul-Mirone/milkdown/blob/main/LICENSE).
+Milkdown is open sourced software licensed under [MIT license](https://github.com/Milkdown/milkdown/blob/main/LICENSE).

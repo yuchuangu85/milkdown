@@ -1,204 +1,130 @@
 /* Copyright 2021, Milkdown by Mirone. */
-import { createCmd, createCmdKey } from '@milkdown/core';
-import { setBlockType, textblockTypeInputRule } from '@milkdown/prose';
-import { createNode } from '@milkdown/utils';
-import mermaid from 'mermaid';
+import { expectDomTypeError } from '@milkdown/exception'
+import { setBlockType } from '@milkdown/prose/commands'
+import { InputRule } from '@milkdown/prose/inputrules'
+import { $command, $ctx, $inputRule, $nodeSchema, $remark } from '@milkdown/utils'
+import type { MermaidConfig } from 'mermaid'
+import mermaid from 'mermaid'
 
-import { remarkMermaid } from '.';
-import { createInnerEditor } from './inner-editor';
-import { getStyle } from './style';
-import { getId } from './utility';
+import { remarkMermaid } from './remark-mermaid'
+import { getId } from './__internal__/get-id'
+import { withMeta } from './__internal__/with-meta'
 
-const inputRegex = /^```mermaid$/;
+/// A slice that contains [options for mermaid](https://mermaid.js.org/config/setup/modules/config.html).
+/// You can configure mermaid here.
+/// ```ts
+/// import { mermaidConfigCtx } from '@milkdown/plugin-diagram'
+///
+/// Editor.make()
+///   .config((ctx) => {
+///     ctx.set(mermaidConfigCtx.key, { /* some options */ });
+///   })
+/// ```
+export const mermaidConfigCtx = $ctx<MermaidConfig, 'mermaidConfig'>({ startOnLoad: false }, 'mermaidConfig')
 
-export type Options = {
-    placeholder: {
-        empty: string;
-        error: string;
-    };
-};
+withMeta(mermaidConfigCtx, {
+  displayName: 'Ctx<mermaidConfig>',
+})
 
-export const TurnIntoDiagram = createCmdKey();
+const id = 'diagram'
+/// Schema for diagram node.
+export const diagramSchema = $nodeSchema(id, (ctx) => {
+  mermaid.initialize({
+    ...ctx.get(mermaidConfigCtx.key),
+  })
+  return {
+    content: 'text*',
+    group: 'block',
+    marks: '',
+    defining: true,
+    atom: true,
+    isolating: true,
+    attrs: {
+      value: {
+        default: '',
+      },
+      identity: {
+        default: '',
+      },
+    },
+    parseDOM: [
+      {
+        tag: `div[data-type="${id}"]`,
+        preserveWhitespace: 'full',
+        getAttrs: (dom) => {
+          if (!(dom instanceof HTMLElement))
+            throw expectDomTypeError(dom)
 
-export const diagramNode = createNode<string, Options>((utils, options) => {
-    const { mermaidVariables, codeStyle, hideCodeStyle, previewPanelStyle } = getStyle(utils);
-    const header = `%%{init: {'theme': 'base', 'themeVariables': { ${mermaidVariables()} }}}%%\n`;
-
-    const id = 'diagram';
-    mermaid.startOnLoad = false;
-    mermaid.initialize({ startOnLoad: false });
-
-    const placeholder = {
-        empty: 'Empty',
-        error: 'Syntax Error',
-        ...(options?.placeholder ?? {}),
-    };
-
-    return {
-        id,
-        schema: () => ({
-            content: 'text*',
-            group: 'block',
-            marks: '',
-            defining: true,
-            atom: true,
-            code: true,
-            isolating: true,
-            attrs: {
-                value: {
-                    default: '',
-                },
-                identity: {
-                    default: '',
-                },
-            },
-            parseDOM: [
-                {
-                    tag: 'div[data-type="diagram"]',
-                    preserveWhitespace: 'full',
-                    getAttrs: (dom) => {
-                        if (!(dom instanceof HTMLElement)) {
-                            throw new Error();
-                        }
-                        return {
-                            value: dom.innerHTML,
-                            id: dom.id,
-                        };
-                    },
-                },
-            ],
-            toDOM: (node) => {
-                const identity = getId(node);
-                return [
-                    'div',
-                    {
-                        id: identity,
-                        class: utils.getClassName(node.attrs, 'mermaid'),
-                        'data-type': id,
-                        'data-value': node.attrs.value,
-                    },
-                    0,
-                ];
-            },
-            parseMarkdown: {
-                match: ({ type }) => type === id,
-                runner: (state, node, type) => {
-                    const value = node.value as string;
-                    state.openNode(type, { value });
-                    state.addText(value);
-                    state.closeNode();
-                },
-            },
-            toMarkdown: {
-                match: (node) => node.type.name === id,
-                runner: (state, node) => {
-                    state.addNode('code', undefined, node.content.firstChild?.text || '', { lang: 'mermaid' });
-                },
-            },
-        }),
-        commands: (nodeType) => [createCmd(TurnIntoDiagram, () => setBlockType(nodeType, { id: getId() }))],
-        view: () => (node, view, getPos) => {
-            const innerEditor = createInnerEditor(view, getPos);
-
-            const currentId = getId(node);
-            let currentNode = node;
-            const dom = document.createElement('div');
-            dom.classList.add('mermaid', 'diagram');
-            const code = document.createElement('div');
-            code.dataset.type = id;
-            code.dataset.value = node.attrs.value;
-            if (codeStyle) {
-                code.classList.add(codeStyle, hideCodeStyle);
-            }
-
-            const rendered = document.createElement('div');
-            rendered.id = currentId;
-            if (previewPanelStyle) {
-                rendered.classList.add(previewPanelStyle);
-            }
-
-            dom.append(code);
-
-            const render = (code: string) => {
-                try {
-                    if (!code) {
-                        rendered.innerHTML = placeholder.empty;
-                    } else {
-                        const svg = mermaid.render(currentId, header + code);
-                        rendered.innerHTML = svg;
-                    }
-                } catch {
-                    const error = document.getElementById('d' + currentId);
-                    if (error) {
-                        error.remove();
-                    }
-                    rendered.innerHTML = placeholder.error;
-                } finally {
-                    dom.appendChild(rendered);
-                }
-            };
-
-            render(node.attrs.value);
-
-            return {
-                dom,
-                update: (updatedNode) => {
-                    if (!updatedNode.sameMarkup(currentNode)) return false;
-                    currentNode = updatedNode;
-
-                    const innerView = innerEditor.innerView();
-                    if (innerView) {
-                        const state = innerView.state;
-                        const start = updatedNode.content.findDiffStart(state.doc.content);
-                        if (start !== null && start !== undefined) {
-                            const diff = updatedNode.content.findDiffEnd(state.doc.content);
-                            if (diff) {
-                                let { a: endA, b: endB } = diff;
-                                const overlap = start - Math.min(endA, endB);
-                                if (overlap > 0) {
-                                    endA += overlap;
-                                    endB += overlap;
-                                }
-                                innerView.dispatch(
-                                    state.tr.replace(start, endB, node.slice(start, endA)).setMeta('fromOutside', true),
-                                );
-                            }
-                        }
-                    }
-
-                    const newVal = updatedNode.content.firstChild?.text || '';
-                    code.dataset.value = newVal;
-
-                    render(newVal);
-
-                    return true;
-                },
-                selectNode: () => {
-                    if (!view.editable) return;
-                    code.classList.remove(hideCodeStyle);
-                    innerEditor.openEditor(code, currentNode);
-                    dom.classList.add('ProseMirror-selectednode');
-                },
-                deselectNode: () => {
-                    code.classList.add(hideCodeStyle);
-                    innerEditor.closeEditor();
-                    dom.classList.remove('ProseMirror-selectednode');
-                },
-                stopEvent: (event) => {
-                    const innerView = innerEditor.innerView();
-                    const { target } = event;
-                    const isChild = target && innerView?.dom.contains(target as Element);
-                    return !!(innerView && isChild);
-                },
-                ignoreMutation: () => true,
-                destroy() {
-                    rendered.remove();
-                    code.remove();
-                    dom.remove();
-                },
-            };
+          return {
+            value: dom.dataset.value,
+            identity: dom.dataset.id,
+          }
         },
-        inputRules: (nodeType) => [textblockTypeInputRule(inputRegex, nodeType, () => ({ id: getId() }))],
-        remarkPlugins: () => [remarkMermaid],
-    };
-});
+      },
+    ],
+    toDOM: (node) => {
+      const identity = getId(node)
+      const code = node.attrs.value as string
+
+      const dom = document.createElement('div')
+      dom.dataset.type = id
+      dom.dataset.id = identity
+      dom.dataset.value = code
+      dom.textContent = code
+
+      return dom
+    },
+    parseMarkdown: {
+      match: ({ type }) => type === id,
+      runner: (state, node, type) => {
+        const value = node.value as string
+        state.addNode(type, { value, identity: getId() })
+      },
+    },
+    toMarkdown: {
+      match: node => node.type.name === id,
+      runner: (state, node) => {
+        state.addNode('code', undefined, node.attrs.value || '', { lang: 'mermaid' })
+      },
+    },
+  }
+})
+
+withMeta(diagramSchema.node, {
+  displayName: 'NodeSchema<diagram>',
+})
+withMeta(diagramSchema.ctx, {
+  displayName: 'NodeSchemaCtx<diagram>',
+})
+
+/// A input rule that will insert a diagram node when you type ` ```mermaid `.
+export const insertDiagramInputRules = $inputRule(ctx =>
+  new InputRule(/^```mermaid$/, (state, _match, start, end) => {
+    const nodeType = diagramSchema.type(ctx)
+    const $start = state.doc.resolve(start)
+    if (!$start.node(-1).canReplaceWith($start.index(-1), $start.indexAfter(-1), nodeType))
+      return null
+    return state.tr.delete(start, end).setBlockType(start, start, nodeType, { identity: getId() })
+  }))
+
+withMeta(insertDiagramInputRules, {
+  displayName: 'InputRule<insertDiagramInputRules>',
+})
+
+/// A remark plugin that will parse mermaid code block.
+export const remarkDiagramPlugin = $remark('remarkMermaid', () => remarkMermaid)
+
+withMeta(remarkDiagramPlugin.plugin, {
+  displayName: 'Remark<diagram>',
+})
+
+withMeta(remarkDiagramPlugin.options, {
+  displayName: 'RemarkConfig<diagram>',
+})
+
+/// A command that will insert a diagram node.
+export const insertDiagramCommand = $command('InsertDiagramCommand', ctx => () => setBlockType(diagramSchema.type(ctx), { identity: getId() }))
+
+withMeta(insertDiagramCommand, {
+  displayName: 'Command<insertDiagramCommand>',
+})

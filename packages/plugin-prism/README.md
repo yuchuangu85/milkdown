@@ -1,20 +1,11 @@
 # @milkdown/plugin-prism
 
-Prism plugin for [milkdown](https://saul-mirone.github.io/milkdown/).
-Add support for prism highlight.
+The prism plugin of [milkdown](https://milkdown.dev/).
 
-# Example Usage
+# Official Documentation
 
-```typescript
-import { Editor } from '@milkdown/core';
-import { commonmark } from '@milkdown/preset-commonmark';
-import { nord } from '@milkdown/theme-nord';
-
-import { prism } from '@milkdown/plugin-prism';
-
-Editor.make().use(nord).use(commonmark).use(prism).create();
-```
+Documentation can be found on the [Milkdown website](https://milkdown.dev/docs/api/plugin-prism).
 
 # License
 
-Milkdown is open sourced software licensed under [MIT license](https://github.com/Saul-Mirone/milkdown/blob/main/LICENSE).
+Milkdown is open sourced software licensed under [MIT license](https://github.com/Milkdown/milkdown/blob/main/LICENSE).
