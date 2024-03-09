@@ -63,6 +63,9 @@ export class SlashProvider {
       trigger: 'manual',
       placement: 'bottom-start',
       interactive: true,
+      delay: 0,
+      arrow: false,
+      duration: 0,
       ...this.#tippyOptions,
       content: this.element,
     })
@@ -108,7 +111,7 @@ export class SlashProvider {
   /// Pass the `matchNode` function to determine whether the current node should be matched, by default, it will match the paragraph node.
   getContent = (view: EditorView, matchNode: (node: Node) => boolean = node => node.type.name === 'paragraph'): string | undefined => {
     const { selection } = view.state
-    const { empty } = selection
+    const { empty, $from } = selection
     const isTextBlock = view.state.selection instanceof TextSelection
 
     const isSlashChildren = this.element.contains(document.activeElement)
@@ -124,7 +127,7 @@ export class SlashProvider {
     if (notHasFocus || isReadonly || !empty || !isTextBlock || isNotInParagraph)
       return
 
-    return paragraph.node.textContent
+    return $from.parent.textBetween(Math.max(0, $from.parentOffset - 500), $from.parentOffset, undefined, '\uFFFC')
   }
 
   /// Destroy the slash.
