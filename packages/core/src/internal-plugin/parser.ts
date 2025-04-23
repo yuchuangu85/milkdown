@@ -1,12 +1,12 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { MilkdownPlugin, TimerType } from '@milkdown/ctx'
+import type { Parser } from '@milkdown/transformer'
+
 import { createSlice, createTimer } from '@milkdown/ctx'
 import { ctxCallOutOfScope } from '@milkdown/exception'
-import type { Parser } from '@milkdown/transformer'
 import { ParserState } from '@milkdown/transformer'
 
 import { withMeta } from '../__internal__'
-import { remarkCtx } from './init'
+import { remarkCtx } from './atoms'
 import { SchemaReady, schemaCtx } from './schema'
 
 /// The timer which will be resolved when the parser plugin is ready.
@@ -28,7 +28,10 @@ export const parserTimerCtx = createSlice([] as TimerType[], 'parserTimer')
 ///
 /// This plugin will wait for the schema plugin.
 export const parser: MilkdownPlugin = (ctx) => {
-  ctx.inject(parserCtx, outOfScope).inject(parserTimerCtx, [SchemaReady]).record(ParserReady)
+  ctx
+    .inject(parserCtx, outOfScope)
+    .inject(parserTimerCtx, [SchemaReady])
+    .record(ParserReady)
 
   return async () => {
     await ctx.waitTimers(parserTimerCtx)

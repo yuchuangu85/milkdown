@@ -1,8 +1,7 @@
-/* Copyright 2021, Milkdown by Mirone. */
-
 import type { Ctx } from '@milkdown/ctx'
-import { editorViewCtx } from '@milkdown/core'
 import type { Attrs } from '@milkdown/prose/model'
+
+import { editorViewCtx } from '@milkdown/core'
 
 /// Set the attributes of the node at the given position.
 export function setAttr(pos: number, update: (prevAttrs: Attrs) => Attrs) {
@@ -10,8 +9,7 @@ export function setAttr(pos: number, update: (prevAttrs: Attrs) => Attrs) {
     const view = ctx.get(editorViewCtx)
     const { tr } = view.state
     const node = tr.doc.nodeAt(pos)
-    if (!node)
-      return
+    if (!node) return
     const nextAttr = update(node.attrs)
     return view.dispatch(tr.setNodeMarkup(pos, undefined, nextAttr))
   }

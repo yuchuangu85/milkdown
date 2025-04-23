@@ -1,19 +1,28 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import type { DefaultValue } from '@milkdown/core'
-import { Editor, defaultValueCtx, editorViewOptionsCtx, rootCtx } from '@milkdown/core'
+import type { DefaultValue } from '@milkdown/kit/core'
+import type { ListenerManager } from '@milkdown/kit/plugin/listener'
 
-import { history } from '@milkdown/plugin-history'
-import { commonmark } from '@milkdown/preset-commonmark'
-import { indent, indentConfig } from '@milkdown/plugin-indent'
-import { clipboard } from '@milkdown/plugin-clipboard'
-import { getMarkdown } from '@milkdown/utils'
-import { CrepeTheme, loadTheme } from '../theme'
-import type { CrepeFeature, CrepeFeatureConfig } from '../feature'
-import { defaultFeatures, loadFeature } from '../feature'
-import { configureEmotion, configureFeatures, configureTheme } from './slice'
+import {
+  Editor,
+  EditorStatus,
+  defaultValueCtx,
+  editorViewOptionsCtx,
+  rootCtx,
+} from '@milkdown/kit/core'
+import { clipboard } from '@milkdown/kit/plugin/clipboard'
+import { history } from '@milkdown/kit/plugin/history'
+import { indent, indentConfig } from '@milkdown/kit/plugin/indent'
+import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
+import { trailing } from '@milkdown/kit/plugin/trailing'
+import { commonmark } from '@milkdown/kit/preset/commonmark'
+import { gfm } from '@milkdown/kit/preset/gfm'
+import { getMarkdown } from '@milkdown/kit/utils'
+
+import type { CrepeFeatureConfig } from '../feature'
+
+import { CrepeFeature, defaultFeatures, loadFeature } from '../feature'
+import { configureFeatures, crepeCtx } from './slice'
 
 export interface CrepeConfig {
-  theme?: CrepeTheme
   features?: Partial<Record<CrepeFeature, boolean>>
   featureConfigs?: CrepeFeatureConfig
   root?: Node | string | null
@@ -21,65 +30,70 @@ export interface CrepeConfig {
 }
 
 export class Crepe {
+  static Feature = CrepeFeature
   readonly #editor: Editor
   readonly #initPromise: Promise<unknown>
   readonly #rootElement: Node
   #editable = true
 
   constructor({
-    theme = CrepeTheme.Classic,
     root,
     features = {},
     featureConfigs = {},
     defaultValue = '',
   }: CrepeConfig) {
-    const enabledFeatures = Object
-      .entries({
-        ...defaultFeatures,
-        ...features,
-      })
+    const enabledFeatures = Object.entries({
+      ...defaultFeatures,
+      ...features,
+    })
       .filter(([, enabled]) => enabled)
       .map(([feature]) => feature as CrepeFeature)
 
-    this.#rootElement = (typeof root === 'string' ? document.querySelector(root) : root) ?? document.body
+    this.#rootElement =
+      (typeof root === 'string' ? document.querySelector(root) : root) ??
+      document.body
     this.#editor = Editor.make()
+      .config((ctx) => {
+        ctx.inject(crepeCtx, this)
+      })
       .config(configureFeatures(enabledFeatures))
-      .config(configureEmotion(this.#rootElement))
-      .config(configureTheme(theme))
       .config((ctx) => {
         ctx.set(rootCtx, this.#rootElement)
         ctx.set(defaultValueCtx, defaultValue)
         ctx.set(editorViewOptionsCtx, {
           editable: () => this.#editable,
         })
-        ctx.update(indentConfig.key, value => ({
+        ctx.update(indentConfig.key, (value) => ({
           ...value,
           size: 4,
         }))
       })
       .use(commonmark)
+      .use(listener)
       .use(history)
       .use(indent)
+      .use(trailing)
       .use(clipboard)
+      .use(gfm)
 
-    const promiseList: Promise<unknown>[] = [loadTheme(theme, this.#editor)]
+    const promiseList: Promise<unknown>[] = []
 
     enabledFeatures.forEach((feature) => {
-      const config = (featureConfigs as Partial<Record<CrepeFeature, never>>)[feature]
-      promiseList.push(
-        loadFeature(feature, this.#editor, config),
-      )
+      const config = (featureConfigs as Partial<Record<CrepeFeature, never>>)[
+        feature
+      ]
+      promiseList.push(loadFeature(feature, this.#editor, config))
     })
 
     this.#initPromise = Promise.all(promiseList)
   }
 
-  async create() {
+  create = async () => {
     await this.#initPromise
     return this.#editor.create()
   }
 
-  async destroy() {
+  destroy = async () => {
     await this.#initPromise
     return this.#editor.destroy()
   }
@@ -88,12 +102,27 @@ export class Crepe {
     return this.#editor
   }
 
-  setReadonly(value: boolean) {
+  setReadonly = (value: boolean) => {
     this.#editable = !value
     return this
   }
 
-  getMarkdown() {
+  getMarkdown = () => {
     return this.#editor.action(getMarkdown())
+  }
+
+  on = (fn: (api: ListenerManager) => void) => {
+    if (this.#editor.status !== EditorStatus.Created) {
+      this.#editor.config((ctx) => {
+        const listener = ctx.get(listenerCtx)
+        fn(listener)
+      })
+      return this
+    }
+    this.#editor.action((ctx) => {
+      const listener = ctx.get(listenerCtx)
+      fn(listener)
+    })
+    return this
   }
 }

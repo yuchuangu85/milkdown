@@ -1,14 +1,13 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { Container, SliceType } from '../context'
 import type { Clock, TimerStatus, TimerType } from '../timer'
 import type { Meta } from './meta'
 
 export interface Telemetry {
   metadata: Meta
-  injectedSlices: { name: string, value: unknown }[]
-  consumedSlices: { name: string, value: unknown }[]
-  recordedTimers: { name: string, duration: number, status: TimerStatus }[]
-  waitTimers: { name: string, duration: number, status: TimerStatus }[]
+  injectedSlices: { name: string; value: unknown }[]
+  consumedSlices: { name: string; value: unknown }[]
+  recordedTimers: { name: string; duration: number; status: TimerStatus }[]
+  waitTimers: { name: string; duration: number; status: TimerStatus }[]
 }
 
 /// The inspector object that is used to inspect the runtime environment of a ctx.
@@ -29,17 +28,16 @@ export class Inspector {
   readonly #consumedSlices: Set<SliceType | string> = new Set()
 
   /// @internal
-  readonly #recordedTimers: Map<TimerType, { duration: number, start: number }> = new Map()
+  readonly #recordedTimers: Map<
+    TimerType,
+    { duration: number; start: number }
+  > = new Map()
 
   /// @internal
   readonly #waitTimers: Map<TimerType, { duration: number }> = new Map()
 
   /// Create an inspector with container, clock and metadata.
-  constructor(
-    container: Container,
-    clock: Clock,
-    meta: Meta,
-  ) {
+  constructor(container: Container, clock: Clock, meta: Meta) {
     this.#container = container
     this.#clock = clock
     this.#meta = meta
@@ -49,19 +47,21 @@ export class Inspector {
   read = (): Telemetry => {
     return {
       metadata: this.#meta,
-      injectedSlices: [...this.#injectedSlices].map(slice => ({
+      injectedSlices: [...this.#injectedSlices].map((slice) => ({
         name: typeof slice === 'string' ? slice : slice.name,
         value: this.#getSlice(slice),
       })),
-      consumedSlices: [...this.#consumedSlices].map(slice => ({
+      consumedSlices: [...this.#consumedSlices].map((slice) => ({
         name: typeof slice === 'string' ? slice : slice.name,
         value: this.#getSlice(slice),
       })),
-      recordedTimers: [...this.#recordedTimers].map(([timer, { duration }]) => ({
-        name: timer.name,
-        duration,
-        status: this.#getTimer(timer),
-      })),
+      recordedTimers: [...this.#recordedTimers].map(
+        ([timer, { duration }]) => ({
+          name: timer.name,
+          duration,
+          status: this.#getTimer(timer),
+        })
+      ),
       waitTimers: [...this.#waitTimers].map(([timer, { duration }]) => ({
         name: timer.name,
         duration,
@@ -83,17 +83,18 @@ export class Inspector {
   /// @internal
   readonly onDone = (timerType: TimerType) => {
     const timer = this.#recordedTimers.get(timerType)
-    if (!timer)
-      return
+    if (!timer) return
     timer.duration = Date.now() - timer.start
   }
 
   /// @internal
   readonly onWait = (timerType: TimerType, promise: Promise<void>) => {
     const start = Date.now()
-    promise.finally(() => {
-      this.#waitTimers.set(timerType, { duration: Date.now() - start })
-    })
+    promise
+      .finally(() => {
+        this.#waitTimers.set(timerType, { duration: Date.now() - start })
+      })
+      .catch(console.error)
   }
 
   /// @internal

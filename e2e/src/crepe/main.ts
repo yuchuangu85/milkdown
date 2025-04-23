@@ -1,22 +1,19 @@
-/* Copyright 2021, Milkdown by Mirone. */
+import { Crepe } from '@milkdown/crepe'
+import '@milkdown/crepe/theme/common/style.css'
+import '@milkdown/crepe/theme/frame.css'
 
-import { Crepe, CrepeFeature, CrepeTheme } from '@milkdown/crepe'
+import { setup } from '../utils'
 
-import './style.css'
-
-const crepe = new Crepe({
-  root: '#app',
-  theme: CrepeTheme.Classic,
-  features: {
-    [CrepeFeature.CodeMirror]: true,
-  },
-  featureConfigs: {
-    [CrepeFeature.Placeholder]: {
-      text: 'Type / to use slash command',
-    },
-  },
-})
-
-Object.assign(window, { crepe })
-
-crepe.create()
+setup(async () => {
+  const crepe = new Crepe({
+    root: '#app',
+  })
+  if (globalThis.__beforeCrepeCreate__) {
+    globalThis.__beforeCrepeCreate__(crepe)
+  }
+  await crepe.create()
+  if (globalThis.__afterCrepeCreated__) {
+    globalThis.__afterCrepeCreated__(crepe)
+  }
+  return crepe.editor
+}).catch(console.error)

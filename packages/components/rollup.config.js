@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -7,21 +6,25 @@ import json from '@rollup/plugin-json'
 import resolve from '@rollup/plugin-node-resolve'
 import esbuild from 'rollup-plugin-esbuild'
 
-import pkg from './package.json' assert { type: 'json' }
+import pkg from './package.json' with { type: 'json' }
 
-const external = [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies || {}), /@milkdown\/prose/]
+const external = [
+  ...Object.keys(pkg.dependencies),
+  ...Object.keys(pkg.peerDependencies || {}),
+  /@milkdown\/prose/,
+]
 
 const main = [
   {
     input: './src/index.ts',
     output: {
-      file: 'lib/index.es.js',
+      file: 'lib/index.js',
       format: 'esm',
       sourcemap: true,
     },
     external,
     plugins: [
-      resolve({ preferBuiltins: true }),
+      resolve({ browser: true }),
       json(),
       commonjs(),
       esbuild({
@@ -37,13 +40,13 @@ function componentModule(name) {
     {
       input,
       output: {
-        file: `lib/${name}/index.es.js`,
+        file: `lib/${name}/index.js`,
         format: 'esm',
         sourcemap: true,
       },
       external,
       plugins: [
-        resolve({ preferBuiltins: true }),
+        resolve({ browser: true }),
         json(),
         commonjs(),
         esbuild({
@@ -60,6 +63,6 @@ const dirs = fs.readdirSync(path.resolve(dirname, './src'))
 
 export default () =>
   dirs
-    .filter(x => x !== '__internal__' && !x.includes('index'))
+    .filter((x) => x !== '__internal__' && !x.includes('index'))
     .flatMap(componentModule)
     .concat(main)

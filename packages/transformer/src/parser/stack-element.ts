@@ -1,9 +1,13 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { Attrs, Node, NodeType } from '@milkdown/prose/model'
+
 import { StackElement } from '../utility'
 
 export class ParserStackElement extends StackElement<Node> {
-  constructor(public type: NodeType, public content: Node[], public attrs?: Attrs) {
+  constructor(
+    public type: NodeType,
+    public content: Node[],
+    public attrs?: Attrs
+  ) {
     super()
   }
 

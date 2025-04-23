@@ -1,5 +1,5 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { expect, it } from 'vitest'
+
 import { SerializerStackElement } from './stack-element'
 
 it('serializer-stack-element', () => {

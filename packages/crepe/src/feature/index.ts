@@ -1,34 +1,60 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import type { Editor } from '@milkdown/core'
+import type { Editor } from '@milkdown/kit/core'
+
+import type { BlockEditFeatureConfig } from './block-edit'
+import type { CodeMirrorFeatureConfig } from './code-mirror'
+import type { CursorFeatureConfig } from './cursor'
+import type { ImageBlockFeatureConfig } from './image-block'
+import type { LatexFeatureConfig } from './latex'
+import type { LinkTooltipFeatureConfig } from './link-tooltip'
+import type { ListItemFeatureConfig } from './list-item'
 import type { PlaceHolderFeatureConfig } from './placeholder'
+import type { TableFeatureConfig } from './table'
+import type { ToolbarFeatureConfig } from './toolbar'
 
 export enum CrepeFeature {
   CodeMirror = 'code-mirror',
   ListItem = 'list-item',
   LinkTooltip = 'link-tooltip',
-  GapCursor = 'gap-cursor',
+  Cursor = 'cursor',
   ImageBlock = 'image-block',
   BlockEdit = 'block-edit',
   Toolbar = 'toolbar',
   Placeholder = 'placeholder',
+  Table = 'table',
+  Latex = 'latex',
 }
 
 export interface CrepeFeatureConfig {
+  [CrepeFeature.Cursor]?: CursorFeatureConfig
+  [CrepeFeature.ListItem]?: ListItemFeatureConfig
+  [CrepeFeature.LinkTooltip]?: LinkTooltipFeatureConfig
+  [CrepeFeature.ImageBlock]?: ImageBlockFeatureConfig
+  [CrepeFeature.BlockEdit]?: BlockEditFeatureConfig
   [CrepeFeature.Placeholder]?: PlaceHolderFeatureConfig
+  [CrepeFeature.Toolbar]?: ToolbarFeatureConfig
+  [CrepeFeature.CodeMirror]?: CodeMirrorFeatureConfig
+  [CrepeFeature.Table]?: TableFeatureConfig
+  [CrepeFeature.Latex]?: LatexFeatureConfig
 }
 
 export const defaultFeatures: Record<CrepeFeature, boolean> = {
+  [CrepeFeature.Cursor]: true,
   [CrepeFeature.ListItem]: true,
   [CrepeFeature.LinkTooltip]: true,
   [CrepeFeature.ImageBlock]: true,
-  [CrepeFeature.GapCursor]: true,
   [CrepeFeature.BlockEdit]: true,
   [CrepeFeature.Placeholder]: true,
   [CrepeFeature.Toolbar]: true,
-  [CrepeFeature.CodeMirror]: false,
+  [CrepeFeature.CodeMirror]: true,
+  [CrepeFeature.Table]: true,
+  [CrepeFeature.Latex]: true,
 }
 
-export async function loadFeature(feature: CrepeFeature, editor: Editor, config?: never) {
+export async function loadFeature(
+  feature: CrepeFeature,
+  editor: Editor,
+  config?: never
+) {
   switch (feature) {
     case CrepeFeature.CodeMirror: {
       const { defineFeature } = await import('./code-mirror')
@@ -46,8 +72,8 @@ export async function loadFeature(feature: CrepeFeature, editor: Editor, config?
       const { defineFeature } = await import('./image-block')
       return defineFeature(editor, config)
     }
-    case CrepeFeature.GapCursor: {
-      const { defineFeature } = await import('./gap-cursor')
+    case CrepeFeature.Cursor: {
+      const { defineFeature } = await import('./cursor')
       return defineFeature(editor, config)
     }
     case CrepeFeature.BlockEdit: {
@@ -60,6 +86,14 @@ export async function loadFeature(feature: CrepeFeature, editor: Editor, config?
     }
     case CrepeFeature.Toolbar: {
       const { defineFeature } = await import('./toolbar')
+      return defineFeature(editor, config)
+    }
+    case CrepeFeature.Table: {
+      const { defineFeature } = await import('./table')
+      return defineFeature(editor, config)
+    }
+    case CrepeFeature.Latex: {
+      const { defineFeature } = await import('./latex')
       return defineFeature(editor, config)
     }
   }

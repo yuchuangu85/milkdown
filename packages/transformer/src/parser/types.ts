@@ -1,7 +1,6 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { MarkType, Node, NodeType } from '@milkdown/prose/model'
-import type { MarkdownNode } from '../utility/types'
 
+import type { MarkdownNode } from '../utility/types'
 import type { ParserState } from './state'
 
 /// The parser type which is used to transform markdown text into prosemirror node.

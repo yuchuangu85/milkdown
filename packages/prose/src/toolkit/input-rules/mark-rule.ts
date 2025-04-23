@@ -1,10 +1,14 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import { InputRule } from '../../inputrules'
 import type { Mark, MarkType } from '../../model'
 import type { Captured, Options } from './common'
 
+import { InputRule } from '../../inputrules'
+
 /// Create an input rule for a mark.
-export function markRule(regexp: RegExp, markType: MarkType, options: Options = {}): InputRule {
+export function markRule(
+  regexp: RegExp,
+  markType: MarkType,
+  options: Options = {}
+): InputRule {
   return new InputRule(regexp, (state, match, start, end) => {
     const { tr } = state
     const matchLength = match.length
@@ -23,15 +27,12 @@ export function markRule(regexp: RegExp, markType: MarkType, options: Options = 
     }
 
     const result = options.updateCaptured?.(captured)
-    Object.assign(captured, result);
+    Object.assign(captured, result)
+    ;({ group, fullMatch, start, end } = captured)
 
-    ({ group, fullMatch, start, end } = captured)
+    if (fullMatch === null) return null
 
-    if (fullMatch === null)
-      return null
-
-    if (group?.trim() === '')
-      return null
+    if (group?.trim() === '') return null
 
     if (group) {
       const startSpaces = fullMatch.search(/\S/)
@@ -40,11 +41,9 @@ export function markRule(regexp: RegExp, markType: MarkType, options: Options = 
 
       initialStoredMarks = tr.storedMarks ?? []
 
-      if (textEnd < end)
-        tr.delete(textEnd, end)
+      if (textEnd < end) tr.delete(textEnd, end)
 
-      if (textStart > start)
-        tr.delete(start + startSpaces, textStart)
+      if (textStart > start) tr.delete(start + startSpaces, textStart)
 
       markEnd = start + startSpaces + group.length
 

@@ -1,106 +1,142 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import type { EditorView, NodeView } from '@milkdown/prose/view'
-import type { KeyBinding } from '@codemirror/view'
-import { EditorView as CodeMirror, keymap as cmKeymap } from '@codemirror/view'
+import type { Line, SelectionRange } from '@codemirror/state'
 import type { Node } from '@milkdown/prose/model'
-import { redo, undo } from '@milkdown/prose/history'
+import type { EditorView, NodeView } from '@milkdown/prose/view'
+
 import { Compartment, EditorState } from '@codemirror/state'
-import type { Line, SelectionRange, Transaction } from '@codemirror/state'
+import {
+  EditorView as CodeMirror,
+  type KeyBinding,
+  type ViewUpdate,
+  keymap as cmKeymap,
+} from '@codemirror/view'
 import { exitCode } from '@milkdown/prose/commands'
+import { redo, undo } from '@milkdown/prose/history'
 import { TextSelection } from '@milkdown/prose/state'
+import { createApp, ref, watchEffect, type App, type WatchHandle } from 'vue'
 
 import type { CodeBlockConfig } from '../config'
-import type { CodeComponentProps } from './component'
 import type { LanguageLoader } from './loader'
 
+import { CodeBlock } from './components/code-block'
+
 export class CodeMirrorBlock implements NodeView {
-  dom: HTMLElement & CodeComponentProps
+  dom: HTMLElement
   cm: CodeMirror
+  app: App
+
+  readonly = ref(false)
+  selected = ref(false)
+  language = ref('')
+  text = ref('')
 
   private updating = false
   private languageName: string = ''
+  private disposeSelectedWatcher: WatchHandle
 
   private readonly languageConf: Compartment
+  private readonly readOnlyConf: Compartment
 
   constructor(
     public node: Node,
     public view: EditorView,
     public getPos: () => number | undefined,
     public loader: LanguageLoader,
-    public config: CodeBlockConfig,
+    public config: CodeBlockConfig
   ) {
     this.languageConf = new Compartment()
-    const changeFilter = EditorState.changeFilter.of((tr) => {
-      if (!tr.docChanged && !this.updating)
-        this.forwardSelection()
-
-      return true
-    })
+    this.readOnlyConf = new Compartment()
 
     this.cm = new CodeMirror({
       doc: this.node.textContent,
+      root: this.view.root,
       extensions: [
+        this.readOnlyConf.of(EditorState.readOnly.of(!this.view.editable)),
         cmKeymap.of(this.codeMirrorKeymap()),
-        changeFilter,
         this.languageConf.of([]),
         ...config.extensions,
+        CodeMirror.updateListener.of(this.forwardUpdate),
       ],
-      dispatch: this.valueChanged,
     })
 
-    this.dom = this.createDom()
+    this.app = this.createApp()
+
+    this.dom = this.createDom(this.app)
+
+    this.disposeSelectedWatcher = watchEffect(() => {
+      const isSelected = this.selected.value
+      if (isSelected) {
+        this.dom.classList.add('selected')
+      } else {
+        this.dom.classList.remove('selected')
+      }
+    })
 
     this.updateLanguage()
   }
 
-  private createDom() {
-    const dom = document.createElement('milkdown-code-block') as HTMLElement & CodeComponentProps
-    dom.codemirror = this.cm
-    dom.getAllLanguages = this.getAllLanguages
-    dom.setLanguage = this.setLanguage
-    const {
-      languages,
-      extensions,
-      ...viewConfig
-    } = this.config
-    dom.config = viewConfig
+  private forwardUpdate = (update: ViewUpdate) => {
+    if (this.updating || !this.cm.hasFocus) return
+    let offset = (this.getPos() ?? 0) + 1
+    const { main } = update.state.selection
+    const selFrom = offset + main.from
+    const selTo = offset + main.to
+    const pmSel = this.view.state.selection
+    if (update.docChanged || pmSel.from !== selFrom || pmSel.to !== selTo) {
+      const tr = this.view.state.tr
+      update.changes.iterChanges((fromA, toA, fromB, toB, text) => {
+        if (text.length)
+          tr.replaceWith(
+            offset + fromA,
+            offset + toA,
+            this.view.state.schema.text(text.toString())
+          )
+        else tr.delete(offset + fromA, offset + toA)
+        offset += toB - fromB - (toA - fromA)
+      })
+      tr.setSelection(TextSelection.create(tr.doc, selFrom, selTo))
+      this.view.dispatch(tr)
+    }
+  }
+
+  private createApp = () => {
+    return createApp(CodeBlock, {
+      text: this.text,
+      selected: this.selected,
+      readonly: this.readonly,
+      codemirror: this.cm,
+      language: this.language,
+      getAllLanguages: this.getAllLanguages,
+      setLanguage: this.setLanguage,
+      config: this.config,
+    })
+  }
+
+  private createDom(app: App) {
+    const dom = document.createElement('div')
+    dom.className = 'milkdown-code-block'
+    this.text.value = this.node.textContent
+    app.mount(dom)
     return dom
   }
 
   private updateLanguage() {
     const languageName = this.node.attrs.language
 
-    if (languageName === this.languageName)
-      return
+    if (languageName === this.languageName) return
 
-    this.dom.language = languageName
-    const language = this.loader.load(languageName)
+    this.language.value = languageName
+    const language = this.loader.load(languageName ?? '')
 
-    language.then((lang) => {
-      if (lang) {
-        this.cm.dispatch({
-          effects: this.languageConf.reconfigure(lang),
-        })
-        this.languageName = languageName
-      }
-    })
-  }
-
-  private asProseMirrorSelection(doc: Node) {
-    const start = (this.getPos() ?? 0) + 1
-    const { anchor, head } = this.cm.state.selection.main
-    return TextSelection.between(doc.resolve(anchor + start), doc.resolve(head + start))
-  }
-
-  private forwardSelection() {
-    if (!this.cm.hasFocus)
-      return
-
-    const state = this.view.state
-    const selection = this.asProseMirrorSelection(state.doc)
-
-    if (!selection.eq(state.selection))
-      this.view.dispatch(state.tr.setSelection(selection))
+    language
+      .then((lang) => {
+        if (lang) {
+          this.cm.dispatch({
+            effects: this.languageConf.reconfigure(lang),
+          })
+          this.languageName = languageName
+        }
+      })
+      .catch(console.error)
   }
 
   private codeMirrorKeymap = (): KeyBinding[] => {
@@ -113,8 +149,7 @@ export class CodeMirrorBlock implements NodeView {
       {
         key: 'Mod-Enter',
         run: () => {
-          if (!exitCode(view.state, view.dispatch))
-            return false
+          if (!exitCode(view.state, view.dispatch)) return false
 
           view.focus()
           return true
@@ -128,20 +163,22 @@ export class CodeMirrorBlock implements NodeView {
         run: () => {
           const ranges = this.cm.state.selection.ranges
 
-          if (ranges.length > 1)
-            return false
+          if (ranges.length > 1) return false
 
           const selection = ranges[0]
 
           if (selection && (!selection.empty || selection.anchor > 0))
             return false
 
-          if (this.cm.state.doc.lines >= 2)
-            return false
+          if (this.cm.state.doc.lines >= 2) return false
 
           const state = this.view.state
           const pos = this.getPos() ?? 0
-          const tr = state.tr.replaceWith(pos, pos + this.node.nodeSize, state.schema.nodes.paragraph!.createChecked({}, this.node.content))
+          const tr = state.tr.replaceWith(
+            pos,
+            pos + this.node.nodeSize,
+            state.schema.nodes.paragraph!.createChecked({}, this.node.content)
+          )
 
           tr.setSelection(TextSelection.near(tr.doc.resolve(pos)))
 
@@ -153,37 +190,18 @@ export class CodeMirrorBlock implements NodeView {
     ]
   }
 
-  private valueChanged = (tr: Transaction): void => {
-    this.cm.update([tr])
-
-    if (!tr.docChanged || this.updating)
-      return
-
-    const change = computeChange(this.node.textContent, tr.state.doc.toString())
-
-    if (change) {
-      const start = (this.getPos() ?? 0) + 1
-      const tr = this.view.state.tr.replaceWith(
-        start + change.from,
-        start + change.to,
-        change.text ? this.view.state.schema.text(change.text) : [],
-      )
-      this.view.dispatch(tr)
-    }
-  }
-
   private maybeEscape = (unit: 'line' | 'char', dir: -1 | 1): boolean => {
     const { state } = this.cm
     let main: SelectionRange | Line = state.selection.main
-    if (!main.empty)
-      return false
-    if (unit === 'line')
-      main = state.doc.lineAt(main.head)
-    if (dir < 0 ? main.from > 0 : main.to < state.doc.length)
-      return false
+    if (!main.empty) return false
+    if (unit === 'line') main = state.doc.lineAt(main.head)
+    if (dir < 0 ? main.from > 0 : main.to < state.doc.length) return false
 
     const targetPos = (this.getPos() ?? 0) + (dir < 0 ? 0 : this.node.nodeSize)
-    const selection = TextSelection.near(this.view.state.doc.resolve(targetPos), dir)
+    const selection = TextSelection.near(
+      this.view.state.doc.resolve(targetPos),
+      dir
+    )
     const tr = this.view.state.tr.setSelection(selection).scrollIntoView()
     this.view.dispatch(tr)
     this.view.focus()
@@ -191,10 +209,8 @@ export class CodeMirrorBlock implements NodeView {
   }
 
   setSelection(anchor: number, head: number) {
-    if (!this.cm.dom.isConnected) {
-      requestAnimationFrame(() => this.setSelection(anchor, head))
-      return
-    }
+    if (!this.cm.dom.isConnected) return
+
     this.cm.focus()
     this.updating = true
     this.cm.dispatch({ selection: { anchor, head } })
@@ -202,11 +218,20 @@ export class CodeMirrorBlock implements NodeView {
   }
 
   update(node: Node) {
-    if (node.type !== this.node.type)
-      return false
+    if (node.type !== this.node.type) return false
+
+    if (this.updating) return true
 
     this.node = node
+    this.text.value = node.textContent
     this.updateLanguage()
+    if (this.view.editable === this.cm.state.readOnly) {
+      this.cm.dispatch({
+        effects: this.readOnlyConf.reconfigure(
+          EditorState.readOnly.of(!this.view.editable)
+        ),
+      })
+    }
 
     const change = computeChange(this.cm.state.doc.toString(), node.textContent)
     if (change) {
@@ -220,12 +245,12 @@ export class CodeMirrorBlock implements NodeView {
   }
 
   selectNode() {
-    this.dom.selected = true
+    this.selected.value = true
     this.cm.focus()
   }
 
   deselectNode() {
-    this.dom.selected = false
+    this.selected.value = false
   }
 
   stopEvent() {
@@ -233,12 +258,18 @@ export class CodeMirrorBlock implements NodeView {
   }
 
   destroy() {
+    this.app.unmount()
     this.cm.destroy()
+    this.disposeSelectedWatcher()
   }
 
   setLanguage = (language: string) => {
     this.view.dispatch(
-      this.view.state.tr.setNodeAttribute(this.getPos() ?? 0, 'language', language),
+      this.view.state.tr.setNodeAttribute(
+        this.getPos() ?? 0,
+        'language',
+        language
+      )
     )
   }
 
@@ -249,22 +280,24 @@ export class CodeMirrorBlock implements NodeView {
 
 function computeChange(
   oldVal: string,
-  newVal: string,
-): { from: number, to: number, text: string } | null {
-  if (oldVal === newVal)
-    return null
+  newVal: string
+): { from: number; to: number; text: string } | null {
+  if (oldVal === newVal) return null
 
   let start = 0
   let oldEnd = oldVal.length
   let newEnd = newVal.length
 
-  while (start < oldEnd && oldVal.charCodeAt(start) === newVal.charCodeAt(start))
+  while (
+    start < oldEnd &&
+    oldVal.charCodeAt(start) === newVal.charCodeAt(start)
+  )
     ++start
 
   while (
-    oldEnd > start
-    && newEnd > start
-    && oldVal.charCodeAt(oldEnd - 1) === newVal.charCodeAt(newEnd - 1)
+    oldEnd > start &&
+    newEnd > start &&
+    oldVal.charCodeAt(oldEnd - 1) === newVal.charCodeAt(newEnd - 1)
   ) {
     oldEnd--
     newEnd--

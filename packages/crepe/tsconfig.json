@@ -1,8 +1,15 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "jsx": "preserve",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
+    "jsxImportSource": "vue",
     "rootDir": "src",
-    "outDir": "lib"
+    "outDir": "lib/types",
+    "emitDeclarationOnly": true,
+    "tsBuildInfoFile": "./lib/tsconfig.tsbuildinfo"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [{ "path": "../kit" }]
 }

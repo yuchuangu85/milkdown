@@ -1,12 +1,28 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import type { Attrs, MarkType, Node, NodeType, Schema } from '@milkdown/prose/model'
-import { createNodeInParserFail, parserMatchError, stackOverFlow } from '@milkdown/exception'
-import { Mark } from '@milkdown/prose/model'
-import type { MarkSchema, MarkdownNode, NodeSchema, RemarkParser } from '../utility'
-import { Stack } from '../utility'
+import type {
+  Attrs,
+  MarkType,
+  Node,
+  NodeType,
+  Schema,
+} from '@milkdown/prose/model'
 
-import { ParserStackElement } from './stack-element'
+import {
+  createNodeInParserFail,
+  parserMatchError,
+  stackOverFlow,
+} from '@milkdown/exception'
+import { Mark } from '@milkdown/prose/model'
+
+import type {
+  MarkSchema,
+  MarkdownNode,
+  NodeSchema,
+  RemarkParser,
+} from '../utility'
 import type { Parser } from './types'
+
+import { Stack } from '../utility'
+import { ParserStackElement } from './stack-element'
 
 /// A state machine for parser. Transform remark AST into prosemirror state.
 export class ParserState extends Stack<Node, ParserStackElement> {
@@ -49,14 +65,15 @@ export class ParserState extends Stack<Node, ParserStackElement> {
 
   /// @internal
   #matchTarget = (node: MarkdownNode): NodeType | MarkType => {
-    const result = Object.values({ ...this.schema.nodes, ...this.schema.marks })
-      .find((x): x is (NodeType | MarkType) => {
-        const spec = x.spec as NodeSchema | MarkSchema
-        return spec.parseMarkdown.match(node)
-      })
+    const result = Object.values({
+      ...this.schema.nodes,
+      ...this.schema.marks,
+    }).find((x): x is NodeType | MarkType => {
+      const spec = x.spec as NodeSchema | MarkSchema
+      return spec.parseMarkdown.match(node)
+    })
 
-    if (!result)
-      throw parserMatchError(node)
+    if (!result) throw parserMatchError(node)
 
     return result
   }
@@ -99,10 +116,13 @@ export class ParserState extends Stack<Node, ParserStackElement> {
   }
 
   /// @internal
-  #addNodeAndPush = (nodeType: NodeType, attrs?: Attrs, content?: Node[]): Node => {
+  #addNodeAndPush = (
+    nodeType: NodeType,
+    attrs?: Attrs,
+    content?: Node[]
+  ): Node => {
     const node = nodeType.createAndFill(attrs, content, this.#marks)
-    if (!node)
-      throw createNodeInParserFail(nodeType, attrs, content)
+    if (!node) throw createNodeInParserFail(nodeType, attrs, content)
 
     this.push(node)
 
@@ -132,8 +152,7 @@ export class ParserState extends Stack<Node, ParserStackElement> {
   /// Add a text node into current node.
   addText = (text: string) => {
     const topElement = this.top()
-    if (!topElement)
-      throw stackOverFlow()
+    if (!topElement) throw stackOverFlow()
 
     const prevNode = topElement.pop()
     const currNode = this.schema.text(text, this.#marks)
@@ -156,8 +175,7 @@ export class ParserState extends Stack<Node, ParserStackElement> {
   build = (): Node => {
     let doc: Node | undefined
 
-    do
-      doc = this.#closeNodeAndPush()
+    do doc = this.#closeNodeAndPush()
     while (this.size())
 
     return doc
@@ -166,7 +184,7 @@ export class ParserState extends Stack<Node, ParserStackElement> {
   /// Give the node or node list back to the state and
   /// the state will find a proper runner (by `match` method in parser spec) to handle it.
   next = (nodes: MarkdownNode | MarkdownNode[] = []) => {
-    [nodes].flat().forEach(node => this.#runNode(node))
+    ;[nodes].flat().forEach((node) => this.#runNode(node))
     return this
   }
 
@@ -175,7 +193,10 @@ export class ParserState extends Stack<Node, ParserStackElement> {
 
   /// Transform a markdown string into prosemirror state.
   run = (remark: RemarkParser, markdown: string) => {
-    const tree = remark.runSync(remark.parse(markdown), markdown) as MarkdownNode
+    const tree = remark.runSync(
+      remark.parse(markdown),
+      markdown
+    ) as MarkdownNode
     this.next(tree)
 
     return this

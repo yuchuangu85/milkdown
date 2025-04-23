@@ -1,5 +1,5 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { Ctx } from '@milkdown/ctx'
+
 import { editorViewCtx } from '@milkdown/core'
 
 /// Force update the editor.

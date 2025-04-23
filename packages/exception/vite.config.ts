@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import { pluginViteConfig } from '../../vite.config.mjs'
+import { pluginViteConfig } from '@milkdown/dev/vite'
 
 export default pluginViteConfig(import.meta.url)

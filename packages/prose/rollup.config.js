@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,9 +8,12 @@ import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
 import copy from 'rollup-plugin-copy'
 
-import pkg from './package.json' assert { type: 'json' }
+import pkg from './package.json' with { type: 'json' }
 
-const external = [...Object.keys(pkg.dependencies), ...Object.keys(pkg.peerDependencies || {})]
+const external = [
+  ...Object.keys(pkg.dependencies),
+  ...Object.keys(pkg.peerDependencies || {}),
+]
 
 const main = [
   {
@@ -25,7 +27,6 @@ const main = [
     plugins: [dts({ respectExternal: true })],
   },
   {
-
     input: './src/index.ts',
     output: {
       file: 'lib/index.js',
@@ -34,7 +35,7 @@ const main = [
     },
     external,
     plugins: [
-      resolve({ preferBuiltins: true }),
+      resolve({ browser: true }),
       json(),
       commonjs(),
       esbuild({
@@ -82,7 +83,7 @@ function proseModule(name) {
       },
       external,
       plugins: [
-        resolve({ preferBuiltins: true }),
+        resolve({ browser: true }),
         json(),
         commonjs(),
         esbuild({
@@ -99,7 +100,7 @@ const dirs = fs.readdirSync(path.resolve(dirname, './src'))
 
 export default () =>
   dirs
-    .filter(x => x.endsWith('.ts') && !x.startsWith('index'))
-    .map(x => x.slice(0, -3))
+    .filter((x) => x.endsWith('.ts') && !x.startsWith('index'))
+    .map((x) => x.slice(0, -3))
     .flatMap(proseModule)
     .concat(...main)

@@ -1,24 +1,30 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import type { html } from 'atomico'
-import type { Ctx } from '@milkdown/ctx'
-import { editorViewCtx } from '@milkdown/core'
+import type { Ctx } from '@milkdown/kit/ctx'
+
+import { imageBlockSchema } from '@milkdown/kit/component/image-block'
+import { editorViewCtx } from '@milkdown/kit/core'
 import {
   blockquoteSchema,
   bulletListSchema,
   codeBlockSchema,
   headingSchema,
   hrSchema,
+  listItemSchema,
   orderedListSchema,
   paragraphSchema,
-} from '@milkdown/preset-commonmark'
-import type { Attrs, NodeType } from '@milkdown/prose/model'
-import { findWrapping } from '@milkdown/prose/transform'
-import type { Command, Transaction } from '@milkdown/prose/state'
-import { imageBlockSchema } from '@milkdown/components'
+} from '@milkdown/kit/preset/commonmark'
+import { createTable } from '@milkdown/kit/preset/gfm'
+import { TextSelection } from '@milkdown/kit/prose/state'
+
+import type { BlockEditFeatureConfig } from '../index'
+import type { MenuItemGroup } from './utils'
+
+import { CrepeFeature } from '../../..'
+import { FeaturesCtx } from '../../../core/slice'
 import {
   bulletListIcon,
   codeIcon,
   dividerIcon,
+  functionsIcon,
   h1Icon,
   h2Icon,
   h3Icon,
@@ -28,297 +34,286 @@ import {
   imageIcon,
   orderedListIcon,
   quoteIcon,
+  tableIcon,
   textIcon,
-} from './icons'
+  todoListIcon,
+} from '../../../icons'
+import { GroupBuilder } from './group-builder'
+import {
+  clearContentAndAddBlockType,
+  clearContentAndSetBlockType,
+  clearContentAndWrapInBlockType,
+  clearRange,
+} from './utils'
 
-interface MenuItem {
-  index: number
-  key: string
-  label: string
-  icon: ReturnType<typeof html>
-  onRun: (ctx: Ctx) => void
-}
+export function getGroups(
+  filter?: string,
+  config?: BlockEditFeatureConfig,
+  ctx?: Ctx
+) {
+  const flags = ctx?.get(FeaturesCtx)
+  const isLatexEnabled = flags?.includes(CrepeFeature.Latex)
+  const isImageBlockEnabled = flags?.includes(CrepeFeature.ImageBlock)
+  const isTableEnabled = flags?.includes(CrepeFeature.Table)
 
-type WithRange<T, HasIndex extends true | false = true> = HasIndex extends true ? T & { range: [start: number, end: number] } : T
+  const groupBuilder = new GroupBuilder()
+  groupBuilder
+    .addGroup('text', config?.slashMenuTextGroupLabel ?? 'Text')
+    .addItem('text', {
+      label: config?.slashMenuTextGroupLabel ?? 'Text',
+      icon: config?.slashMenuTextIcon?.() ?? textIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-type MenuItemGroup<HasIndex extends true | false = true> = WithRange<{
-  key: string
-  label: string
-  items: HasIndex extends true ? MenuItem[] : Omit<MenuItem, 'index'>[]
-}, HasIndex>
+        const command = clearContentAndSetBlockType(paragraphSchema.type(ctx))
+        command(state, dispatch)
+      },
+    })
+    .addItem('h1', {
+      label: config?.slashMenuH1Label ?? 'Heading 1',
+      icon: config?.slashMenuH1Icon?.() ?? h1Icon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-function clearRange(tr: Transaction) {
-  const { $from, $to } = tr.selection
-  const { pos: from } = $from
-  const { pos: to } = $to
-  tr = tr.deleteRange(from - $from.node().content.size, to)
-  return tr
-}
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {
+          level: 1,
+        })
+        command(state, dispatch)
+      },
+    })
+    .addItem('h2', {
+      label: config?.slashMenuH2Label ?? 'Heading 2',
+      icon: config?.slashMenuH2Icon?.() ?? h2Icon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-function setBlockType(tr: Transaction, nodeType: NodeType, attrs: Attrs | null = null) {
-  const { from, to } = tr.selection
-  return tr.setBlockType(from, to, nodeType, attrs)
-}
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {
+          level: 2,
+        })
+        command(state, dispatch)
+      },
+    })
+    .addItem('h3', {
+      label: config?.slashMenuH3Label ?? 'Heading 3',
+      icon: config?.slashMenuH3Icon?.() ?? h3Icon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-function wrapInBlockType(tr: Transaction, nodeType: NodeType, attrs: Attrs | null = null) {
-  const { $from, $to } = tr.selection
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {
+          level: 3,
+        })
+        command(state, dispatch)
+      },
+    })
+    .addItem('h4', {
+      label: config?.slashMenuH4Label ?? 'Heading 4',
+      icon: config?.slashMenuH4Icon?.() ?? h4Icon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-  const range = $from.blockRange($to)
-  const wrapping = range && findWrapping(range, nodeType, attrs)
-  if (!wrapping)
-    return null
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {
+          level: 4,
+        })
+        command(state, dispatch)
+      },
+    })
+    .addItem('h5', {
+      label: config?.slashMenuH5Label ?? 'Heading 5',
+      icon: config?.slashMenuH5Icon?.() ?? h5Icon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-  return tr.wrap(range, wrapping)
-}
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {
+          level: 5,
+        })
+        command(state, dispatch)
+      },
+    })
+    .addItem('h6', {
+      label: config?.slashMenuH6Label ?? 'Heading 6',
+      icon: config?.slashMenuH6Icon?.() ?? h6Icon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-function addBlockType(tr: Transaction, nodeType: NodeType, attrs: Attrs | null = null) {
-  const node = nodeType.createAndFill(attrs)
-  if (!node)
-    return null
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {
+          level: 6,
+        })
+        command(state, dispatch)
+      },
+    })
+    .addItem('quote', {
+      label: config?.slashMenuQuoteLabel ?? 'Quote',
+      icon: config?.slashMenuQuoteIcon?.() ?? quoteIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-  return tr.replaceSelectionWith(node)
-}
+        const command = clearContentAndWrapInBlockType(
+          blockquoteSchema.type(ctx)
+        )
+        command(state, dispatch)
+      },
+    })
+    .addItem('divider', {
+      label: config?.slashMenuDividerLabel ?? 'Divider',
+      icon: config?.slashMenuDividerIcon?.() ?? dividerIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-function clearContentAndSetBlockType(nodeType: NodeType, attrs: Attrs | null = null): Command {
-  return (state, dispatch) => {
-    if (dispatch) {
-      const tr = setBlockType(clearRange(state.tr), nodeType, attrs)
-      dispatch(tr.scrollIntoView())
-    }
-    return true
+        const command = clearContentAndAddBlockType(hrSchema.type(ctx))
+        command(state, dispatch)
+      },
+    })
+
+  groupBuilder
+    .addGroup('list', config?.slashMenuListGroupLabel ?? 'List')
+    .addItem('bullet-list', {
+      label: config?.slashMenuBulletListLabel ?? 'Bullet List',
+      icon: config?.slashMenuBulletListIcon?.() ?? bulletListIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
+
+        const command = clearContentAndWrapInBlockType(
+          bulletListSchema.type(ctx)
+        )
+        command(state, dispatch)
+      },
+    })
+    .addItem('ordered-list', {
+      label: config?.slashMenuOrderedListLabel ?? 'Ordered List',
+      icon: config?.slashMenuOrderedListIcon?.() ?? orderedListIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
+
+        const command = clearContentAndWrapInBlockType(
+          orderedListSchema.type(ctx)
+        )
+        command(state, dispatch)
+      },
+    })
+    .addItem('todo-list', {
+      label: config?.slashMenuTaskListLabel ?? 'Todo List',
+      icon: config?.slashMenuTaskListIcon?.() ?? todoListIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
+
+        const command = clearContentAndWrapInBlockType(
+          listItemSchema.type(ctx),
+          { checked: false }
+        )
+        command(state, dispatch)
+      },
+    })
+
+  const advancedGroup = groupBuilder.addGroup(
+    'advanced',
+    config?.slashMenuAdvancedGroupLabel ?? 'Advanced'
+  )
+
+  if (isImageBlockEnabled) {
+    advancedGroup.addItem('image', {
+      label: config?.slashMenuImageLabel ?? 'Image',
+      icon: config?.slashMenuImageIcon?.() ?? imageIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
+
+        const command = clearContentAndAddBlockType(imageBlockSchema.type(ctx))
+        command(state, dispatch)
+      },
+    })
   }
-}
 
-function clearContentAndWrapInBlockType(nodeType: NodeType, attrs: Attrs | null = null): Command {
-  return (state, dispatch) => {
-    const tr = wrapInBlockType(clearRange(state.tr), nodeType, attrs)
-    if (!tr)
-      return false
+  advancedGroup.addItem('code', {
+    label: config?.slashMenuCodeBlockLabel ?? 'Code',
+    icon: config?.slashMenuCodeBlockIcon?.() ?? codeIcon,
+    onRun: (ctx) => {
+      const view = ctx.get(editorViewCtx)
+      const { dispatch, state } = view
 
-    if (dispatch)
-      dispatch(tr.scrollIntoView())
+      const command = clearContentAndAddBlockType(codeBlockSchema.type(ctx))
+      command(state, dispatch)
+    },
+  })
 
-    return true
+  if (isTableEnabled) {
+    advancedGroup.addItem('table', {
+      label: config?.slashMenuTableLabel ?? 'Table',
+      icon: config?.slashMenuTableIcon?.() ?? tableIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
+        let { tr } = state
+        tr = clearRange(tr)
+        const from = tr.selection.from
+        const table = createTable(ctx, 3, 3)
+        tr = tr.replaceSelectionWith(table)
+        dispatch(tr)
+
+        requestAnimationFrame(() => {
+          const docSize = view.state.doc.content.size
+          const $pos = view.state.doc.resolve(
+            from > docSize ? docSize : from < 0 ? 0 : from
+          )
+          const selection = TextSelection.near($pos)
+          const tr = view.state.tr
+          tr.setSelection(selection)
+          dispatch(tr.scrollIntoView())
+        })
+      },
+    })
   }
-}
 
-function clearContentAndAddBlockType(nodeType: NodeType, attrs: Attrs | null = null): Command {
-  return (state, dispatch) => {
-    const tr = addBlockType(clearRange(state.tr), nodeType, attrs)
-    if (!tr)
-      return false
+  if (isLatexEnabled) {
+    advancedGroup.addItem('math', {
+      label: config?.slashMenuMathLabel ?? 'Math',
+      icon: config?.slashMenuMathIcon?.() ?? functionsIcon,
+      onRun: (ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const { dispatch, state } = view
 
-    if (dispatch)
-      dispatch(tr.scrollIntoView())
-
-    return true
+        const command = clearContentAndAddBlockType(codeBlockSchema.type(ctx), {
+          language: 'LaTex',
+        })
+        command(state, dispatch)
+      },
+    })
   }
-}
 
-export function getGroups(filter?: string) {
-  let groups: MenuItemGroup<false>[] = [
-    {
-      key: 'text',
-      label: 'Text',
-      items: [
-        {
-          key: 'text',
-          label: 'Text',
-          icon: textIcon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
+  config?.buildMenu?.(groupBuilder)
 
-            const command = clearContentAndSetBlockType(paragraphSchema.type(ctx))
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'h1',
-          label: 'Heading 1',
-          icon: h1Icon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndSetBlockType(headingSchema.type(ctx), { level: 1 })
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'h2',
-          label: 'Heading 2',
-          icon: h2Icon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndSetBlockType(headingSchema.type(ctx), { level: 2 })
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'h3',
-          label: 'Heading 3',
-          icon: h3Icon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndSetBlockType(headingSchema.type(ctx), { level: 3 })
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'h4',
-          label: 'Heading 4',
-          icon: h4Icon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndSetBlockType(headingSchema.type(ctx), { level: 4 })
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'h5',
-          label: 'Heading 5',
-          icon: h5Icon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndSetBlockType(headingSchema.type(ctx), { level: 5 })
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'h6',
-          label: 'Heading 6',
-          icon: h6Icon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndSetBlockType(headingSchema.type(ctx), { level: 6 })
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'quote',
-          label: 'Quote',
-          icon: quoteIcon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndWrapInBlockType(blockquoteSchema.type(ctx))
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'divider',
-          label: 'Divider',
-          icon: dividerIcon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndAddBlockType(hrSchema.type(ctx))
-            command(state, dispatch)
-          },
-        },
-      ],
-    },
-    {
-      key: 'list',
-      label: 'List',
-      items: [
-        {
-          key: 'bullet-list',
-          label: 'Bullet List',
-          icon: bulletListIcon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndWrapInBlockType(bulletListSchema.type(ctx))
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'ordered-list',
-          label: 'Ordered List',
-          icon: orderedListIcon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndWrapInBlockType(orderedListSchema.type(ctx))
-            command(state, dispatch)
-          },
-        },
-      ],
-    },
-    {
-      key: 'advanced',
-      label: 'Advanced',
-      items: [
-        {
-          key: 'image',
-          label: 'Image',
-          icon: imageIcon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndAddBlockType(imageBlockSchema.type(ctx))
-            command(state, dispatch)
-          },
-        },
-        {
-          key: 'code',
-          label: 'Code',
-          icon: codeIcon,
-          onRun: (ctx) => {
-            const view = ctx.get(editorViewCtx)
-            const { dispatch, state } = view
-
-            const command = clearContentAndAddBlockType(codeBlockSchema.type(ctx))
-            command(state, dispatch)
-          },
-        },
-      ],
-    },
-  ]
+  let groups = groupBuilder.build()
 
   if (filter) {
     groups = groups
       .map((group) => {
-        const items = group
-          .items
-          .filter(item =>
-            item
-              .label
-              .toLowerCase()
-              .includes(filter.toLowerCase()))
+        const items = group.items.filter((item) =>
+          item.label.toLowerCase().includes(filter.toLowerCase())
+        )
 
         return {
           ...group,
           items,
         }
       })
-      .filter(group => group.items.length > 0)
+      .filter((group) => group.items.length > 0)
   }
 
-  const items = groups.flatMap(groups => groups.items)
-  items
-    .forEach(((item, index) => {
-      Object.assign(item, {
-        index,
-      })
-    }))
+  const items = groups.flatMap((groups) => groups.items)
+  items.forEach((item, index) => {
+    Object.assign(item, { index })
+  })
 
   groups.reduce((acc, group) => {
     const end = acc + group.items.length
@@ -329,7 +324,7 @@ export function getGroups(filter?: string) {
   }, 0)
 
   return {
-    groups: groups as unknown as MenuItemGroup[],
+    groups: groups as MenuItemGroup[],
     size: items.length,
   }
 }

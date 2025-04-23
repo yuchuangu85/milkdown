@@ -18,13 +18,12 @@ e2e/cypress/downloads
 
 sitemap.xml
 
+.eslintcache
+
 .env
-nx-cloud.env
 *.local
 *.cache
 *error.log
 *debug.log
-
-.nx/cache
 
 storybook-static

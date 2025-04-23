@@ -1,12 +1,12 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { MilkdownPlugin, TimerType } from '@milkdown/ctx'
-import { createSlice, createTimer } from '@milkdown/ctx'
 import type { Serializer } from '@milkdown/transformer'
+
+import { createSlice, createTimer } from '@milkdown/ctx'
+import { ctxCallOutOfScope } from '@milkdown/exception'
 import { SerializerState } from '@milkdown/transformer'
 
-import { ctxCallOutOfScope } from '@milkdown/exception'
 import { withMeta } from '../__internal__'
-import { remarkCtx } from './init'
+import { remarkCtx } from './atoms'
 import { SchemaReady, schemaCtx } from './schema'
 
 /// The timer which will be resolved when the serializer plugin is ready.
@@ -14,14 +14,20 @@ export const SerializerReady = createTimer('SerializerReady')
 
 /// A slice which stores timers that need to be waited for before starting to run the plugin.
 /// By default, it's `[SchemaReady]`.
-export const serializerTimerCtx = createSlice([] as TimerType[], 'serializerTimer')
+export const serializerTimerCtx = createSlice(
+  [] as TimerType[],
+  'serializerTimer'
+)
 
 const outOfScope = (() => {
   throw ctxCallOutOfScope()
 }) as Serializer
 
 /// A slice which contains the serializer.
-export const serializerCtx = createSlice<Serializer, 'serializer'>(outOfScope, 'serializer')
+export const serializerCtx = createSlice<Serializer, 'serializer'>(
+  outOfScope,
+  'serializer'
+)
 
 /// The serializer plugin.
 /// This plugin will create a serializer.
@@ -42,7 +48,10 @@ export const serializer: MilkdownPlugin = (ctx) => {
     ctx.done(SerializerReady)
 
     return () => {
-      ctx.remove(serializerCtx).remove(serializerTimerCtx).clearTimer(SerializerReady)
+      ctx
+        .remove(serializerCtx)
+        .remove(serializerTimerCtx)
+        .clearTimer(SerializerReady)
     }
   }
 }

@@ -1,8 +1,7 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import { $ctx } from '@milkdown/utils'
 import type { Mark } from '@milkdown/prose/model'
-import { html } from 'atomico'
-import { edit, link, trash } from '../__internal__/icons'
+
+import { $ctx } from '@milkdown/utils'
+
 import { withMeta } from '../__internal__/meta'
 
 export interface LinkToolTipState {
@@ -40,26 +39,29 @@ withMeta(linkTooltipState, {
 })
 
 export interface LinkTooltipConfig {
-  linkIcon: () => ReturnType<typeof html>
-  editButton: () => ReturnType<typeof html>
-  confirmButton: () => ReturnType<typeof html>
-  removeButton: () => ReturnType<typeof html>
+  linkIcon: () => string
+  editButton: () => string
+  confirmButton: () => string
+  removeButton: () => string
   onCopyLink: (link: string) => void
   inputPlaceholder: string
 }
 
 const defaultConfig: LinkTooltipConfig = {
-  linkIcon: () => link,
-  editButton: () => edit,
-  removeButton: () => trash,
-  confirmButton: () => html`Confirm ⏎`,
+  linkIcon: () => '🔗',
+  editButton: () => '✎',
+  removeButton: () => '⌫',
+  confirmButton: () => 'Confirm ⏎',
   onCopyLink: () => {},
   inputPlaceholder: 'Paste link...',
 }
 
-export const linkTooltipConfig = $ctx({
-  ...defaultConfig,
-}, 'linkTooltipConfigCtx')
+export const linkTooltipConfig = $ctx(
+  {
+    ...defaultConfig,
+  },
+  'linkTooltipConfigCtx'
+)
 
 withMeta(linkTooltipState, {
   displayName: 'Config<link-tooltip>',

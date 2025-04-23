@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { LanguageDescription, LanguageSupport } from '@codemirror/language'
 
 export interface LanguageInfo {
@@ -32,11 +31,9 @@ export class LanguageLoader {
     const languageMap = this.map
     const language = languageMap[languageName.toLowerCase()]
 
-    if (!language)
-      return Promise.resolve(undefined)
+    if (!language) return Promise.resolve(undefined)
 
-    if (language.support)
-      return Promise.resolve(language.support)
+    if (language.support) return Promise.resolve(language.support)
 
     return language.load()
   }

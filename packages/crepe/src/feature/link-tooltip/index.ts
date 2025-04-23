@@ -1,21 +1,39 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import { configureLinkTooltip, linkTooltipConfig, linkTooltipPlugin } from '@milkdown/components/link-tooltip'
-import { injectStyle } from '../../core/slice'
-import type { DefineFeature } from '../shared'
-import { confirmIcon, deleteIcon, editIcon, linkIcon } from './consts'
-import style from './style.css?inline'
+import {
+  configureLinkTooltip,
+  linkTooltipConfig,
+  linkTooltipPlugin,
+} from '@milkdown/kit/component/link-tooltip'
 
-export const defineFeature: DefineFeature = (editor) => {
+import type { DefineFeature, Icon } from '../shared'
+
+import { copyIcon, editIcon, removeIcon, confirmIcon } from '../../icons'
+
+interface LinkTooltipConfig {
+  linkIcon: Icon
+  editButton: Icon
+  removeButton: Icon
+  confirmButton: Icon
+  inputPlaceholder: string
+  onCopyLink: (link: string) => void
+}
+
+export type LinkTooltipFeatureConfig = Partial<LinkTooltipConfig>
+
+export const defineFeature: DefineFeature<LinkTooltipFeatureConfig> = (
+  editor,
+  config
+) => {
   editor
-    .config(injectStyle(style))
     .config(configureLinkTooltip)
     .config((ctx) => {
-      ctx.update(linkTooltipConfig.key, config => ({
-        ...config,
-        linkIcon: () => linkIcon,
-        editButton: () => editIcon,
-        removeButton: () => deleteIcon,
-        confirmButton: () => confirmIcon,
+      ctx.update(linkTooltipConfig.key, (prev) => ({
+        ...prev,
+        linkIcon: config?.linkIcon ?? (() => copyIcon),
+        editButton: config?.editButton ?? (() => editIcon),
+        removeButton: config?.removeButton ?? (() => removeIcon),
+        confirmButton: config?.confirmButton ?? (() => confirmIcon),
+        inputPlaceholder: config?.inputPlaceholder ?? 'Paste link...',
+        onCopyLink: config?.onCopyLink ?? (() => {}),
       }))
     })
     .use(linkTooltipPlugin)

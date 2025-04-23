@@ -1,9 +1,7 @@
-/* Copyright 2021, Milkdown by Mirone. */
-
 import { Editor, defaultValueCtx, rootCtx } from '@milkdown/core'
-import { nord } from '@milkdown/theme-nord'
-import { commonmark } from '@milkdown/preset-commonmark'
 import { listener, listenerCtx } from '@milkdown/plugin-listener'
+import { commonmark } from '@milkdown/preset-commonmark'
+import { nord } from '@milkdown/theme-nord'
 
 import { setup } from '../utils'
 
@@ -17,7 +15,7 @@ setup(() => {
       ctx.set(rootCtx, document.getElementById('app'))
       ctx.set(defaultValueCtx, 'test')
       ctx.get(listenerCtx).markdownUpdated((_, markdown, prevMarkdown) => {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.log(markdown, prevMarkdown)
       })
     })
@@ -25,4 +23,4 @@ setup(() => {
     .use(commonmark)
     .use(listener)
     .create()
-})
+}).catch(console.error)

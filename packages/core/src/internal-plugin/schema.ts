@@ -1,11 +1,16 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { MilkdownPlugin, TimerType } from '@milkdown/ctx'
+import type {
+  MarkSchema,
+  NodeSchema,
+  RemarkParser,
+} from '@milkdown/transformer'
+
 import { createSlice, createTimer } from '@milkdown/ctx'
 import { Schema } from '@milkdown/prose/model'
-import type { MarkSchema, NodeSchema, RemarkParser } from '@milkdown/transformer'
 
 import { withMeta } from '../__internal__'
-import { InitReady, remarkCtx, remarkPluginsCtx } from '.'
+import { remarkCtx, remarkPluginsCtx } from './atoms'
+import { InitReady } from './init'
 
 /// The timer which will be resolved when the schema plugin is ready.
 export const SchemaReady = createTimer('SchemaReady')
@@ -26,7 +31,7 @@ export const marksCtx = createSlice([] as Array<[string, MarkSchema]>, 'marks')
 function extendPriority<T extends NodeSchema | MarkSchema>(x: T): T {
   return {
     ...x,
-    parseDOM: x.parseDOM?.map(rule => ({ priority: x.priority, ...rule })),
+    parseDOM: x.parseDOM?.map((rule) => ({ priority: x.priority, ...rule })),
   }
 }
 
@@ -48,11 +53,19 @@ export const schema: MilkdownPlugin = (ctx) => {
     const remark = ctx.get(remarkCtx)
     const remarkPlugins = ctx.get(remarkPluginsCtx)
 
-    const processor = remarkPlugins.reduce((acc: RemarkParser, plug) => acc.use(plug.plugin, plug.options) as unknown as RemarkParser, remark)
+    const processor = remarkPlugins.reduce(
+      (acc: RemarkParser, plug) =>
+        acc.use(plug.plugin, plug.options) as unknown as RemarkParser,
+      remark
+    )
     ctx.set(remarkCtx, processor)
 
-    const nodes = Object.fromEntries(ctx.get(nodesCtx).map(([key, x]) => [key, extendPriority(x)]))
-    const marks = Object.fromEntries(ctx.get(marksCtx).map(([key, x]) => [key, extendPriority(x)]))
+    const nodes = Object.fromEntries(
+      ctx.get(nodesCtx).map(([key, x]) => [key, extendPriority(x)])
+    )
+    const marks = Object.fromEntries(
+      ctx.get(marksCtx).map(([key, x]) => [key, extendPriority(x)])
+    )
     const schema = new Schema({ nodes, marks })
 
     ctx.set(schemaCtx, schema)
@@ -60,7 +73,12 @@ export const schema: MilkdownPlugin = (ctx) => {
     ctx.done(SchemaReady)
 
     return () => {
-      ctx.remove(schemaCtx).remove(nodesCtx).remove(marksCtx).remove(schemaTimerCtx).clearTimer(SchemaReady)
+      ctx
+        .remove(schemaCtx)
+        .remove(nodesCtx)
+        .remove(marksCtx)
+        .remove(schemaTimerCtx)
+        .clearTimer(SchemaReady)
     }
   }
 }

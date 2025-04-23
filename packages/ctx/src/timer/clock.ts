@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { timerNotFound } from '@milkdown/exception'
 
 import type { Timer, TimerType } from './timer'
@@ -14,8 +13,7 @@ export class Clock {
   /// Get a timer from the clock by timer type.
   get = (timer: TimerType) => {
     const meta = this.store.get(timer.id)
-    if (!meta)
-      throw timerNotFound(timer.name)
+    if (!meta) throw timerNotFound(timer.name)
     return meta
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "@milkdown/utils",
   "type": "module",
-  "version": "7.3.5",
+  "version": "7.9.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -16,64 +16,29 @@
   },
   "main": "./src/index.ts",
   "publishConfig": {
-    "main": "./lib/index.es.js",
+    "main": "./lib/index.js",
     "types": "./lib/index.d.ts",
     "exports": {
       ".": {
-        "import": "./lib/index.es.js",
+        "import": "./lib/index.js",
         "types": "./lib/index.d.ts"
       }
     }
+  },
+  "scripts": {
+    "build": "vite build"
   },
   "files": [
     "lib",
     "src"
   ],
-  "scripts": {
-    "start": "concurrently -n es,dts \"vite build --watch\"  \"tsc --emitDeclarationOnly --watch\"",
-    "test": "vitest",
-    "tsc": "tsc --noEmit && echo",
-    "build": "tsc --emitDeclarationOnly && vite build"
-  },
-  "peerDependencies": {
-    "@milkdown/core": "^7.2.0",
-    "@milkdown/ctx": "^7.2.0",
-    "@milkdown/prose": "^7.2.0",
-    "@milkdown/transformer": "^7.2.0"
-  },
   "dependencies": {
-    "@milkdown/exception": "workspace:*",
-    "nanoid": "^5.0.0",
-    "tslib": "^2.5.0"
-  },
-  "devDependencies": {
     "@milkdown/core": "workspace:*",
     "@milkdown/ctx": "workspace:*",
     "@milkdown/prose": "workspace:*",
-    "@milkdown/transformer": "workspace:*"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "outputs": [
-          "{projectRoot}/lib"
-        ],
-        "dependsOn": [
-          {
-            "target": "build",
-            "projects": "dependencies"
-          }
-        ]
-      },
-      "tsc": {
-        "outputs": [],
-        "dependsOn": [
-          {
-            "target": "build",
-            "projects": "dependencies"
-          }
-        ]
-      }
-    }
+    "@milkdown/transformer": "workspace:*",
+    "@milkdown/exception": "workspace:*",
+    "nanoid": "^5.0.9",
+    "tslib": "^2.8.1"
   }
 }

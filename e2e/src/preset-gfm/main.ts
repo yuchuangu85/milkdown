@@ -1,9 +1,8 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { Editor, rootCtx } from '@milkdown/core'
-import { nord } from '@milkdown/theme-nord'
-import { commonmark } from '@milkdown/preset-commonmark'
 import { history } from '@milkdown/plugin-history'
+import { commonmark } from '@milkdown/preset-commonmark'
 import { gfm } from '@milkdown/preset-gfm'
+import { nord } from '@milkdown/theme-nord'
 
 import { setup } from '../utils'
 
@@ -22,4 +21,4 @@ setup(() => {
     .use(gfm)
     .use(history)
     .create()
-})
+}).catch(console.error)

@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { Options } from 'remark-stringify'
 
 export const remarkHandlers: Required<Options>['handlers'] = {
@@ -12,7 +11,7 @@ export const remarkHandlers: Required<Options>['handlers'] = {
         before: value,
         after: marker,
         ...tracker.current(),
-      }),
+      })
     )
     value += tracker.move(marker + marker)
     exit()
@@ -28,7 +27,7 @@ export const remarkHandlers: Required<Options>['handlers'] = {
         before: value,
         after: marker,
         ...tracker.current(),
-      }),
+      })
     )
     value += tracker.move(marker)
     exit()

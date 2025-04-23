@@ -1,12 +1,9 @@
-/* Copyright 2021, Milkdown by Mirone. */
-
 import { Editor, rootCtx } from '@milkdown/core'
-import { nord } from '@milkdown/theme-nord'
-import { listener, listenerCtx } from '@milkdown/plugin-listener'
 import { automd } from '@milkdown/plugin-automd'
+import { listener, listenerCtx } from '@milkdown/plugin-listener'
 import { commonmark, markInputRules } from '@milkdown/preset-commonmark'
 import { markInputRules as GFMMarkInputRules, gfm } from '@milkdown/preset-gfm'
-import { math, mathInlineInputRule } from '@milkdown/plugin-math'
+import { nord } from '@milkdown/theme-nord'
 
 import { setup } from '../utils'
 
@@ -19,15 +16,14 @@ setup(() => {
     .config((ctx) => {
       ctx.set(rootCtx, document.getElementById('app'))
       ctx.get(listenerCtx).markdownUpdated((_, markdown) => {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.log(markdown)
       })
     })
     .config(nord)
-    .use(commonmark.filter(x => !markInputRules.includes(x)))
-    .use(gfm.filter(x => !GFMMarkInputRules.includes(x)))
-    .use(math.filter(x => x !== mathInlineInputRule))
+    .use(commonmark.filter((x) => !markInputRules.includes(x)))
+    .use(gfm.filter((x) => !GFMMarkInputRules.includes(x)))
     .use(listener)
     .use(automd)
     .create()
-})
+}).catch(console.error)

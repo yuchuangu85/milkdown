@@ -1,5 +1,5 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { Editor } from '@milkdown/core'
+
 import { editorViewCtx, parserCtx, serializerCtx } from '@milkdown/core'
 import { Slice } from '@milkdown/prose/model'
 
@@ -8,16 +8,21 @@ export async function setup(createEditor: () => Promise<Editor>) {
 
   const editor = await createEditor()
   globalThis.__milkdown__ = editor
-  globalThis.__view__ = editor.action(ctx => ctx.get(editorViewCtx))
+  globalThis.__view__ = editor.action((ctx) => ctx.get(editorViewCtx))
   globalThis.__setMarkdown__ = (markdown: string) =>
     editor.action((ctx) => {
       const view = ctx.get(editorViewCtx)
       const parser = ctx.get(parserCtx)
       const doc = parser(markdown)
-      if (!doc)
-        return
+      if (!doc) return
       const state = view.state
-      view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)))
+      view.dispatch(
+        state.tr.replace(
+          0,
+          state.doc.content.size,
+          new Slice(doc.content, 0, 0)
+        )
+      )
     })
   globalThis.__getMarkdown__ = () =>
     editor.action((ctx) => {
@@ -29,13 +34,13 @@ export async function setup(createEditor: () => Promise<Editor>) {
 
   const logButton = document.querySelector<HTMLDivElement>('#log')
   if (logButton) {
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
     logButton.onclick = () => console.log(globalThis.__getMarkdown__())
   }
 
   const inspectButton = document.querySelector<HTMLDivElement>('#inspect')
   if (inspectButton) {
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
     inspectButton.onclick = () => console.log(globalThis.__inspect__())
   }
   return editor

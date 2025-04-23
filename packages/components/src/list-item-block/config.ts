@@ -1,22 +1,37 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { $ctx } from '@milkdown/utils'
-import { html } from 'atomico'
+
 import { withMeta } from '../__internal__/meta'
 
+interface RenderLabelProps {
+  label: string
+  listType: string
+  readonly?: boolean
+  checked?: boolean
+}
+
 export interface ListItemBlockConfig {
-  renderLabel: (label: string, listType: string, checked?: boolean) => void
+  renderLabel: (props: RenderLabelProps) => string
 }
 
 export const defaultListItemBlockConfig: ListItemBlockConfig = {
-  renderLabel: (label: string, listType, checked?: boolean) => {
-    if (checked == null)
-      return html`<span class='label'>${listType === 'bullet' ? '⦿' : label}</span>`
+  renderLabel: ({ label, listType, checked }: RenderLabelProps) => {
+    const content =
+      checked == null
+        ? listType === 'bullet'
+          ? '⦿'
+          : label
+        : checked
+          ? '☑'
+          : '□'
 
-    return html`<input class='label' type="checkbox" checked=${checked} />`
+    return content
   },
 }
 
-export const listItemBlockConfig = $ctx(defaultListItemBlockConfig, 'listItemBlockConfigCtx')
+export const listItemBlockConfig = $ctx(
+  defaultListItemBlockConfig,
+  'listItemBlockConfigCtx'
+)
 
 withMeta(listItemBlockConfig, {
   displayName: 'Config<list-item-block>',

@@ -1,13 +1,14 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { Mark, Schema } from '@milkdown/prose/model'
+
 import { describe, expect, it } from 'vitest'
+
 import { SerializerState } from './state'
 
 const boldMark = {
-  isInSet: arr => arr.includes('bold'),
-  addToSet: arr => arr.concat('bold'),
+  isInSet: (arr) => arr.includes('bold'),
+  addToSet: (arr) => arr.concat('bold'),
   type: {
-    removeFromSet: arr => arr.filter(x => x !== 'bold'),
+    removeFromSet: (arr) => arr.filter((x) => x !== 'bold'),
   },
 } as unknown as Mark
 
@@ -16,7 +17,7 @@ const schema = {
     paragraph: {
       spec: {
         toMarkdown: {
-          match: node => node.type === 'paragraph',
+          match: (node) => node.type === 'paragraph',
           runner: (state, node) => {
             state.addNode('text', [], node.value)
           },
@@ -26,7 +27,7 @@ const schema = {
     blockquote: {
       spec: {
         toMarkdown: {
-          match: node => node.type === 'blockquote',
+          match: (node) => node.type === 'blockquote',
           runner: (state, node) => {
             state.openNode('blockquote')
             state.next(node.content)

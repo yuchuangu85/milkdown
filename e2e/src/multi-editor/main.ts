@@ -1,9 +1,8 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { Editor, rootCtx } from '@milkdown/core'
-import { nord } from '@milkdown/theme-nord'
-import { commonmark } from '@milkdown/preset-commonmark'
 import { history } from '@milkdown/plugin-history'
+import { commonmark } from '@milkdown/preset-commonmark'
 import { gfm, insertTableCommand } from '@milkdown/preset-gfm'
+import { nord } from '@milkdown/theme-nord'
 import { callCommand } from '@milkdown/utils'
 
 import { setup } from '../utils'
@@ -23,11 +22,13 @@ setup(() => {
     .use(gfm)
     .use(history)
     .create()
-}).then((editor1) => {
-  globalThis.commands.addTable = () => {
-    editor1.action(callCommand(insertTableCommand.key))
-  }
 })
+  .then((editor1) => {
+    globalThis.commands.addTable = () => {
+      editor1.action(callCommand(insertTableCommand.key))
+    }
+  })
+  .catch(console.error)
 
 setup(() => {
   return Editor.make()
@@ -40,8 +41,10 @@ setup(() => {
     .use(gfm)
     .use(history)
     .create()
-}).then((editor2) => {
-  globalThis.commands.addTable2 = () => {
-    editor2.action(callCommand(insertTableCommand.key))
-  }
 })
+  .then((editor2) => {
+    globalThis.commands.addTable2 = () => {
+      editor2.action(callCommand(insertTableCommand.key))
+    }
+  })
+  .catch(console.error)

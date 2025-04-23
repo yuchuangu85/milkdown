@@ -1,14 +1,9 @@
-/* Copyright 2021, Milkdown by Mirone. */
-
-/* eslint-disable vars-on-top */
-/* eslint-disable no-var */
-
-/// <reference types="cypress" />
 /// <reference types="vite/client" />
 
 import type { Editor } from '@milkdown/core'
-import type { EditorView } from '@milkdown/prose/view'
+import type { Crepe } from '@milkdown/crepe'
 import type { Telemetry } from '@milkdown/ctx'
+import type { EditorView } from '@milkdown/prose/view'
 
 declare global {
   var __milkdown__: Editor
@@ -19,13 +14,8 @@ declare global {
 
   var __inspect__: () => Telemetry[]
 
-  namespace Cypress {
-    interface Chainable {
-      paste(payload: Record<string, unknown>): Chainable<void>
-      isMarkdown(markdown: string): Chainable<void>
-      markdownFixture(path: string): Chainable<void>
-    }
-  }
+  var __beforeCrepeCreate__: (crepe: Crepe) => void
+  var __afterCrepeCreated__: (crepe: Crepe) => void
 
   var commands: {
     toggleStrong?: () => void

@@ -1,30 +1,47 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import type { Ctx } from '@milkdown/ctx'
-import { listItemBlockComponent, listItemBlockConfig } from '@milkdown/components/list-item-block'
-import { html } from 'atomico'
-import { injectStyle } from '../../core/slice'
-import type { DefineFeature } from '../shared'
-import { bulletIcon } from './consts'
-import style from './style.css?inline'
+import type { Ctx } from '@milkdown/kit/ctx'
 
-function configureListItem(ctx: Ctx) {
+import {
+  listItemBlockComponent,
+  listItemBlockConfig,
+} from '@milkdown/kit/component/list-item-block'
+
+import type { DefineFeature, Icon } from '../shared'
+
+import {
+  bulletIcon,
+  checkBoxCheckedIcon,
+  checkBoxUncheckedIcon,
+} from '../../icons'
+
+export interface ListItemConfig {
+  bulletIcon: Icon
+  checkBoxCheckedIcon: Icon
+  checkBoxUncheckedIcon: Icon
+}
+
+export type ListItemFeatureConfig = Partial<ListItemConfig>
+
+function configureListItem(ctx: Ctx, config?: ListItemFeatureConfig) {
   ctx.set(listItemBlockConfig.key, {
-    renderLabel: (label: string, listType, checked?: boolean) => {
+    renderLabel: ({ label, listType, checked }) => {
       if (checked == null) {
-        if (listType === 'bullet')
-          return html`<span class='label'>${bulletIcon}</span>`
+        if (listType === 'bullet') return config?.bulletIcon?.() ?? bulletIcon
 
-        return html`<span class='label'>${label}</span>`
+        return label
       }
 
-      return html`<input class='label' type="checkbox" checked=${checked} />`
+      if (checked) return config?.checkBoxCheckedIcon?.() ?? checkBoxCheckedIcon
+
+      return config?.checkBoxUncheckedIcon?.() ?? checkBoxUncheckedIcon
     },
   })
 }
 
-export const defineFeature: DefineFeature = (editor) => {
+export const defineFeature: DefineFeature<ListItemFeatureConfig> = (
+  editor,
+  config
+) => {
   editor
-    .config(injectStyle(style))
-    .config(configureListItem)
+    .config((ctx) => configureListItem(ctx, config))
     .use(listItemBlockComponent)
 }

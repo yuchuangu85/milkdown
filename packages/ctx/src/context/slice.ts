@@ -1,5 +1,5 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { ctxCallOutOfScope } from '@milkdown/exception'
+
 import type { SliceMap } from './container'
 
 /// Slice is a value of slice type.
@@ -15,7 +15,7 @@ export class Slice<T = any, N extends string = string> {
 
   /// @internal
   #emit = () => {
-    this.#watchers.forEach(watcher => watcher(this.#value))
+    this.#watchers.forEach((watcher) => watcher(this.#value))
   }
 
   /// @internal
@@ -30,7 +30,7 @@ export class Slice<T = any, N extends string = string> {
   on(watcher: (value: T) => unknown) {
     this.#watchers.push(watcher)
     return () => {
-      this.#watchers = this.#watchers.filter(w => w !== watcher)
+      this.#watchers = this.#watchers.filter((w) => w !== watcher)
     }
   }
 
@@ -47,7 +47,7 @@ export class Slice<T = any, N extends string = string> {
 
   /// Remove a watcher.
   off(watcher: (value: T) => unknown) {
-    this.#watchers = this.#watchers.filter(w => w !== watcher)
+    this.#watchers = this.#watchers.filter((w) => w !== watcher)
   }
 
   /// Remove all watchers.
@@ -102,4 +102,7 @@ export class SliceType<T = any, N extends string = string> {
 
 /// Create a slice type with a default value and a name.
 /// This is equivalent to `new SliceType(value, name)`.
-export const createSlice = <T = any, N extends string = string>(value: T, name: N) => new SliceType(value, name)
+export const createSlice = <T = any, N extends string = string>(
+  value: T,
+  name: N
+) => new SliceType(value, name)

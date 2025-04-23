@@ -1,30 +1,32 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { $ctx } from '@milkdown/utils'
-import { html } from 'atomico'
-import { chatBubble, image } from '../__internal__/icons'
+
 import { withMeta } from '../__internal__/meta'
 
 export interface ImageBlockConfig {
-  imageIcon: () => ReturnType<typeof html>
-  captionIcon: () => ReturnType<typeof html>
-  uploadButton: () => ReturnType<typeof html>
-  confirmButton: () => ReturnType<typeof html>
+  imageIcon: () => string | undefined
+  captionIcon: () => string | undefined
+  uploadButton: () => string | undefined
+  confirmButton: () => string | undefined
   uploadPlaceholderText: string
   captionPlaceholderText: string
   onUpload: (file: File) => Promise<string>
+  proxyDomURL?: (url: string) => Promise<string> | string
 }
 
 export const defaultImageBlockConfig: ImageBlockConfig = {
-  imageIcon: () => image,
-  captionIcon: () => chatBubble,
-  uploadButton: () => html`Upload file`,
-  confirmButton: () => html`Confirm ⏎`,
+  imageIcon: () => '🌌',
+  captionIcon: () => '💬',
+  uploadButton: () => 'Upload file',
+  confirmButton: () => 'Confirm ⏎',
   uploadPlaceholderText: 'or paste the image link ...',
   captionPlaceholderText: 'Image caption',
-  onUpload: file => Promise.resolve(URL.createObjectURL(file)),
+  onUpload: (file) => Promise.resolve(URL.createObjectURL(file)),
 }
 
-export const imageBlockConfig = $ctx(defaultImageBlockConfig, 'imageBlockConfigCtx')
+export const imageBlockConfig = $ctx(
+  defaultImageBlockConfig,
+  'imageBlockConfigCtx'
+)
 
 withMeta(imageBlockConfig, {
   displayName: 'Config<image-block>',

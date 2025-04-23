@@ -1,7 +1,7 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { MilkdownPlugin } from '@milkdown/ctx'
-import { codeBlockView } from './view'
+
 import { codeBlockConfig } from './config'
+import { codeBlockView } from './view'
 
 export * from './config'
 export * from './view'

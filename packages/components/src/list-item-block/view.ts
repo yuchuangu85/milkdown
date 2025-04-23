@@ -1,93 +1,112 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import { $view } from '@milkdown/utils'
-import type { NodeViewConstructor } from '@milkdown/prose/view'
-import { TextSelection } from '@milkdown/prose/state'
 import type { Node } from '@milkdown/prose/model'
+import type { NodeViewConstructor } from '@milkdown/prose/view'
+
 import { listItemSchema } from '@milkdown/preset-commonmark'
+import { $view } from '@milkdown/utils'
+import { createApp, ref, watchEffect } from 'vue'
+
 import { withMeta } from '../__internal__/meta'
-import type { ListItemComponentProps } from './component'
-import { ListItemElement } from './component'
+import { ListItem } from './component'
 import { listItemBlockConfig } from './config'
 
-customElements.define('milkdown-list-item-block', ListItemElement)
-export const listItemBlockView = $view(listItemSchema.node, (ctx): NodeViewConstructor => {
-  return (initialNode, view, getPos) => {
-    const dom = document.createElement('milkdown-list-item-block') as HTMLElement & ListItemComponentProps
-    const contentDOM = document.createElement('div')
-    contentDOM.setAttribute('data-content-dom', 'true')
-    contentDOM.classList.add('content-dom')
-    const config = ctx.get(listItemBlockConfig.key)
-    const bindAttrs = (node: Node) => {
-      dom.listType = node.attrs.listType
-      dom.label = node.attrs.label
-      dom.checked = node.attrs.checked
-    }
+export const listItemBlockView = $view(
+  listItemSchema.node,
+  (ctx): NodeViewConstructor => {
+    return (initialNode, view, getPos) => {
+      const dom = document.createElement('div')
+      dom.className = 'milkdown-list-item-block'
 
-    bindAttrs(initialNode)
-    dom.appendChild(contentDOM)
-    dom.selected = false
-    dom.setAttr = (attr, value) => {
-      const pos = getPos()
-      if (pos == null)
-        return
+      const contentDOM = document.createElement('div')
+      contentDOM.setAttribute('data-content-dom', 'true')
+      contentDOM.classList.add('content-dom')
 
-      view.dispatch(view.state.tr.setNodeAttribute(pos, attr, value))
-    }
-    dom.onMount = () => {
-      const pos = getPos() ?? 0
-      const end = pos + initialNode.nodeSize
-      const { from, to } = view.state.selection
-      if (view.hasFocus() && pos < from && to < end) {
-        Promise.resolve().then(() => {
-          const p = view.state.doc.resolve(pos)
-          view.dispatch(view.state.tr.setSelection(TextSelection.near(p, 1)))
-        })
+      const label = ref(initialNode.attrs.label)
+      const checked = ref(initialNode.attrs.checked)
+      const listType = ref(initialNode.attrs.listType)
+      const readonly = ref(!view.editable)
+      const config = ctx.get(listItemBlockConfig.key)
+      const selected = ref(false)
+      const setAttr = (attr: string, value: unknown) => {
+        const pos = getPos()
+        if (pos == null) return
+        view.dispatch(view.state.tr.setNodeAttribute(pos, attr, value))
+      }
+      const disposeSelectedWatcher = watchEffect(() => {
+        const isSelected = selected.value
+        if (isSelected) {
+          dom.classList.add('selected')
+        } else {
+          dom.classList.remove('selected')
+        }
+      })
+      const onMount = (div: HTMLElement) => {
+        div.appendChild(contentDOM)
+      }
+
+      const app = createApp(ListItem, {
+        label,
+        checked,
+        listType,
+        readonly,
+        config,
+        selected,
+        setAttr,
+        onMount,
+      })
+      app.mount(dom)
+      const bindAttrs = (node: Node) => {
+        listType.value = node.attrs.listType
+        label.value = node.attrs.label
+        checked.value = node.attrs.checked
+        readonly.value = !view.editable
+      }
+
+      bindAttrs(initialNode)
+      let node = initialNode
+      return {
+        dom,
+        contentDOM,
+        update: (updatedNode) => {
+          if (updatedNode.type !== initialNode.type) return false
+
+          if (
+            updatedNode.sameMarkup(node) &&
+            updatedNode.content.eq(node.content)
+          )
+            return true
+
+          node = updatedNode
+          bindAttrs(updatedNode)
+          return true
+        },
+        ignoreMutation: (mutation) => {
+          if (!dom || !contentDOM) return true
+
+          if ((mutation.type as unknown) === 'selection') return false
+
+          if (contentDOM === mutation.target && mutation.type === 'attributes')
+            return true
+
+          if (contentDOM.contains(mutation.target)) return false
+
+          return true
+        },
+        selectNode: () => {
+          selected.value = true
+        },
+        deselectNode: () => {
+          selected.value = false
+        },
+        destroy: () => {
+          disposeSelectedWatcher()
+          app.unmount()
+          dom.remove()
+          contentDOM.remove()
+        },
       }
     }
-    let node = initialNode
-    dom.config = config
-    return {
-      dom,
-      contentDOM,
-      update: (updatedNode) => {
-        if (updatedNode.type !== initialNode.type)
-          return false
-
-        if (updatedNode.sameMarkup(node) && updatedNode.content.eq(node.content))
-          return false
-
-        node = updatedNode
-        bindAttrs(updatedNode)
-        return true
-      },
-      ignoreMutation: (mutation) => {
-        if (!dom || !contentDOM)
-          return true
-
-        if ((mutation.type as unknown) === 'selection')
-          return false
-
-        if (contentDOM === mutation.target && mutation.type === 'attributes')
-          return true
-
-        if (contentDOM.contains(mutation.target))
-          return false
-
-        return true
-      },
-      selectNode: () => {
-        dom.selected = true
-      },
-      deselectNode: () => {
-        dom.selected = false
-      },
-      destroy: () => {
-        dom.remove()
-        contentDOM.remove()
-      },
-    }
   }
-})
+)
 
 withMeta(listItemBlockView, {
   displayName: 'NodeView<list-item-block>',

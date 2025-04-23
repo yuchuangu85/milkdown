@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { describe, expect, it } from 'vitest'
 
 import { TimerType } from './timer'
@@ -23,6 +22,8 @@ describe('timing/timing', () => {
     const map = new Map()
     const timer = timerType.create(map)
 
-    await expect(timer.start()).rejects.toStrictEqual(new Error('Timing timer timeout.'))
+    await expect(timer.start()).rejects.toStrictEqual(
+      new Error('Timing timer timeout.')
+    )
   })
 })

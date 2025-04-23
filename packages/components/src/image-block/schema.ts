@@ -1,6 +1,6 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import { $nodeSchema } from '@milkdown/utils'
 import { expectDomTypeError } from '@milkdown/exception'
+import { $nodeSchema } from '@milkdown/utils'
+
 import { withMeta } from '../__internal__/meta'
 
 export const IMAGE_DATA_TYPE = 'image-block'
@@ -16,16 +16,15 @@ export const imageBlockSchema = $nodeSchema('image-block', () => {
     atom: true,
     priority: 100,
     attrs: {
-      src: { default: '' },
-      caption: { default: '' },
-      ratio: { default: 1 },
+      src: { default: '', validate: 'string' },
+      caption: { default: '', validate: 'string' },
+      ratio: { default: 1, validate: 'number' },
     },
     parseDOM: [
       {
         tag: `img[data-type="${IMAGE_DATA_TYPE}"]`,
         getAttrs: (dom) => {
-          if (!(dom instanceof HTMLElement))
-            throw expectDomTypeError(dom)
+          if (!(dom instanceof HTMLElement)) throw expectDomTypeError(dom)
 
           return {
             src: dom.getAttribute('src') || '',
@@ -35,16 +34,14 @@ export const imageBlockSchema = $nodeSchema('image-block', () => {
         },
       },
     ],
-    toDOM: node =>
-      ['img', { 'data-type': IMAGE_DATA_TYPE, ...node.attrs }],
+    toDOM: (node) => ['img', { 'data-type': IMAGE_DATA_TYPE, ...node.attrs }],
     parseMarkdown: {
       match: ({ type }) => type === 'image-block',
       runner: (state, node, type) => {
         const src = node.url as string
-        const caption = (node.title) as string
-        let ratio = Number(node.alt as string || 1)
-        if (Number.isNaN(ratio) || ratio === 0)
-          ratio = 1
+        const caption = node.title as string
+        let ratio = Number((node.alt as string) || 1)
+        if (Number.isNaN(ratio) || ratio === 0) ratio = 1
 
         state.addNode(type, {
           src,
@@ -54,7 +51,7 @@ export const imageBlockSchema = $nodeSchema('image-block', () => {
       },
     },
     toMarkdown: {
-      match: node => node.type.name === 'image-block',
+      match: (node) => node.type.name === 'image-block',
       runner: (state, node) => {
         state.openNode('paragraph')
         state.addNode('image', undefined, undefined, {

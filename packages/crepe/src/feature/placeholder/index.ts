@@ -1,13 +1,14 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import { $ctx, $prose } from '@milkdown/utils'
-import type { EditorState } from '@milkdown/prose/state'
-import { Plugin, PluginKey } from '@milkdown/prose/state'
-import type { Node } from '@milkdown/prose/model'
-import { Decoration, DecorationSet } from '@milkdown/prose/view'
+import type { Node } from '@milkdown/kit/prose/model'
+import type { EditorState } from '@milkdown/kit/prose/state'
+
+import { findParent } from '@milkdown/kit/prose'
+import { Plugin, PluginKey } from '@milkdown/kit/prose/state'
+import { Decoration, DecorationSet } from '@milkdown/kit/prose/view'
+import { $ctx, $prose } from '@milkdown/kit/utils'
+
 import type { DefineFeature } from '../shared'
-import { injectStyle } from '../../core/slice'
+
 import { isInCodeBlock, isInList } from '../../utils'
-import style from './style.css?inline'
 
 function isDocEmpty(doc: Node) {
   return doc.childCount <= 1 && !doc.firstChild?.content.size
@@ -15,36 +16,40 @@ function isDocEmpty(doc: Node) {
 
 function createPlaceholderDecoration(
   state: EditorState,
-  placeholderText: string,
+  placeholderText: string
 ): Decoration | null {
   const { selection } = state
-  if (!selection.empty)
-    return null
+  if (!selection.empty) return null
 
   const $pos = selection.$anchor
   const node = $pos.parent
-  if (node.content.size > 0)
-    return null
+  if (node.content.size > 0) return null
+
+  const inTable = findParent((node) => node.type.name === 'table')($pos)
+  if (inTable) return null
 
   const before = $pos.before()
 
   return Decoration.node(before, before + node.nodeSize, {
-    'class': 'crepe-placeholder',
+    class: 'crepe-placeholder',
     'data-placeholder': placeholderText,
   })
 }
 
-export interface PlaceholderConfig {
+interface PlaceholderConfig {
   text: string
   mode: 'doc' | 'block'
 }
 
 export type PlaceHolderFeatureConfig = Partial<PlaceholderConfig>
 
-export const placeholderConfig = $ctx({
-  text: 'Please enter...',
-  mode: 'block',
-} as PlaceholderConfig, 'placeholderConfigCtx')
+export const placeholderConfig = $ctx(
+  {
+    text: 'Please enter...',
+    mode: 'block',
+  } as PlaceholderConfig,
+  'placeholderConfigCtx'
+)
 
 export const placeholderPlugin = $prose((ctx) => {
   return new Plugin({
@@ -52,16 +57,14 @@ export const placeholderPlugin = $prose((ctx) => {
     props: {
       decorations: (state) => {
         const config = ctx.get(placeholderConfig.key)
-        if (config.mode === 'doc' && !isDocEmpty(state.doc))
-          return null
+        if (config.mode === 'doc' && !isDocEmpty(state.doc)) return null
 
         if (isInCodeBlock(state.selection) || isInList(state.selection))
           return null
 
-        const placeholderText = config.text
+        const placeholderText = config.text ?? 'Please enter...'
         const deco = createPlaceholderDecoration(state, placeholderText)
-        if (!deco)
-          return null
+        if (!deco) return null
 
         return DecorationSet.create(state.doc, [deco])
       },
@@ -69,9 +72,11 @@ export const placeholderPlugin = $prose((ctx) => {
   })
 })
 
-export const defineFeature: DefineFeature<PlaceHolderFeatureConfig> = (editor, config) => {
+export const defineFeature: DefineFeature<PlaceHolderFeatureConfig> = (
+  editor,
+  config
+) => {
   editor
-    .config(injectStyle(style))
     .config((ctx) => {
       if (config) {
         ctx.update(placeholderConfig.key, (prev) => {

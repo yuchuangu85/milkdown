@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+**/storybook-static
+**/lib
+**/.storybook
+**/tests/data/*.md

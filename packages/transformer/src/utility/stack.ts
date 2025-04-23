@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { stackOverFlow } from '@milkdown/exception'
 
 /// The element of the stack, which holds an array of nodes.
@@ -42,8 +41,7 @@ export class Stack<Node, Element extends StackElement<Node>> {
   /// Close the top element and pop it.
   close = (): Element => {
     const el = this.elements.pop()
-    if (!el)
-      throw stackOverFlow()
+    if (!el) throw stackOverFlow()
 
     return el
   }

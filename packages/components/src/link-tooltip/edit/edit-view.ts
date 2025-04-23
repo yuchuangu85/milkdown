@@ -1,15 +1,22 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import type { Ctx } from '@milkdown/ctx'
-import { TextSelection } from '@milkdown/prose/state'
-import type { PluginView } from '@milkdown/prose/state'
 import type { Mark } from '@milkdown/prose/model'
+import type { PluginView } from '@milkdown/prose/state'
 import type { EditorView } from '@milkdown/prose/view'
+
+import { editorViewCtx } from '@milkdown/core'
 import { TooltipProvider } from '@milkdown/plugin-tooltip'
-import { editorViewCtx, rootDOMCtx } from '@milkdown/core'
-import { posToDOMRect } from '@milkdown/prose'
 import { linkSchema } from '@milkdown/preset-commonmark'
-import { linkTooltipConfig, linkTooltipState } from '../slices'
-import { LinkEditElement } from './edit-component'
+import { posToDOMRect } from '@milkdown/prose'
+import { TextSelection } from '@milkdown/prose/state'
+import DOMPurify from 'dompurify'
+import { createApp, ref, type App, type Ref } from 'vue'
+
+import {
+  linkTooltipConfig,
+  linkTooltipState,
+  type LinkTooltipConfig,
+} from '../slices'
+import { EditLink } from './component'
 
 interface Data {
   from: number
@@ -24,59 +31,68 @@ const defaultData: Data = {
 }
 
 export class LinkEditTooltip implements PluginView {
-  #content = new LinkEditElement()
+  #content: HTMLElement
   #provider: TooltipProvider
   #data: Data = { ...defaultData }
+  #app: App
+  #config: Ref<LinkTooltipConfig>
+  #src = ref('')
 
-  constructor(readonly ctx: Ctx, view: EditorView) {
+  constructor(
+    readonly ctx: Ctx,
+    view: EditorView
+  ) {
+    this.#config = ref(this.ctx.get(linkTooltipConfig.key))
+
+    const content = document.createElement('div')
+    content.className = 'milkdown-link-edit'
+
+    const app = createApp(EditLink, {
+      config: this.#config,
+      src: this.#src,
+      onConfirm: this.#confirmEdit,
+      onCancel: this.#reset,
+    })
+    app.mount(content)
+    this.#app = app
+
+    this.#content = content
     this.#provider = new TooltipProvider({
-      content: this.#content,
+      content,
       debounce: 0,
       shouldShow: () => false,
-      tippyOptions: {
-        appendTo: () => ctx.get(rootDOMCtx),
-        onHidden: () => {
-          this.#content.update().catch((e) => {
-            throw e
-          })
-          ctx.get(editorViewCtx).dom.focus()
-        },
-      },
     })
+    this.#provider.onHide = () => {
+      requestAnimationFrame(() => {
+        view.dom.focus({ preventScroll: true })
+      })
+    }
     this.#provider.update(view)
-    this.#content.onConfirm = this.#confirmEdit
-    this.#content.onCancel = this.#reset
   }
 
   #reset = () => {
     this.#provider.hide()
-    this.ctx.update(linkTooltipState.key, state => ({
+    this.ctx.update(linkTooltipState.key, (state) => ({
       ...state,
       mode: 'preview' as const,
     }))
     this.#data = { ...defaultData }
   }
 
-  #setRect = (rect: DOMRect) => {
-    this.#provider.getInstance()?.setProps({
-      getReferenceClientRect: () => rect,
-    })
-  }
-
   #confirmEdit = (href: string) => {
     const view = this.ctx.get(editorViewCtx)
     const { from, to, mark } = this.#data
     const type = linkSchema.type(this.ctx)
-    if (mark && mark.attrs.href === href) {
+    const link = DOMPurify.sanitize(href)
+    if (mark && mark.attrs.href === link) {
       this.#reset()
       return
     }
 
     const tr = view.state.tr
-    if (mark)
-      tr.removeMark(from, to, mark)
+    if (mark) tr.removeMark(from, to, mark)
 
-    tr.addMark(from, to, type.create({ href }))
+    tr.addMark(from, to, type.create({ href: link }))
     view.dispatch(tr)
 
     this.#reset()
@@ -84,16 +100,19 @@ export class LinkEditTooltip implements PluginView {
 
   #enterEditMode = (value: string, from: number, to: number) => {
     const config = this.ctx.get(linkTooltipConfig.key)
-    this.#content.config = config
-    this.#content.src = value
-    this.ctx.update(linkTooltipState.key, state => ({
+    this.#config.value = config
+    this.#src.value = value
+    this.ctx.update(linkTooltipState.key, (state) => ({
       ...state,
       mode: 'edit' as const,
     }))
     const view = this.ctx.get(editorViewCtx)
-    this.#setRect(posToDOMRect(view, from, to))
-    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)))
-    this.#provider.show()
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to))
+    )
+    this.#provider.show({
+      getBoundingClientRect: () => posToDOMRect(view, from, to),
+    })
     requestAnimationFrame(() => {
       this.#content.querySelector('input')?.focus()
     })
@@ -102,14 +121,15 @@ export class LinkEditTooltip implements PluginView {
   update = (view: EditorView) => {
     const { state } = view
     const { selection } = state
+    if (!(selection instanceof TextSelection)) return
     const { from, to } = selection
-    if (from === this.#data.from && to === this.#data.to)
-      return
+    if (from === this.#data.from && to === this.#data.to) return
 
     this.#reset()
   }
 
   destroy = () => {
+    this.#app.unmount()
     this.#provider.destroy()
     this.#content.remove()
   }

@@ -1,4 +1,8 @@
-/* Copyright 2021, Milkdown by Mirone. */
-import type { Editor } from '@milkdown/core'
+import type { Editor } from '@milkdown/kit/core'
 
-export type DefineFeature<Config = unknown> = (editor: Editor, config?: Config) => void
+export type DefineFeature<Config = unknown> = (
+  editor: Editor,
+  config?: Config
+) => void | Promise<void>
+
+export type Icon = () => string
