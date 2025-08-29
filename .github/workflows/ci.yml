@@ -17,9 +17,10 @@ env:
 jobs:
   install-deps:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -30,7 +31,7 @@ jobs:
     needs: install-deps
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -47,7 +48,7 @@ jobs:
     needs: install-deps
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -61,7 +62,7 @@ jobs:
     needs: install-deps
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -69,6 +70,22 @@ jobs:
 
       - name: Build packages
         run: pnpm build
+
+      - name: Publish snapshot
+        if: ${{ github.event_name == 'pull_request' }}
+        run: >
+          ./node_modules/.bin/pkg-pr-new publish --pnpm
+          ./packages/plugins/*
+          ./packages/integrations/*
+          ./packages/core
+          ./packages/ctx
+          ./packages/exception
+          ./packages/components
+          ./packages/transformer
+          ./packages/prose
+          ./packages/utils
+          ./packages/kit
+          ./packages/crepe
 
   e2e:
     runs-on: ubuntu-latest
@@ -79,14 +96,16 @@ jobs:
         shard: [1, 2, 3, 4, 5]
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - uses: ./.github/actions/setup
 
       - name: Build e2e
-        run: pnpm --filter=@milkdown/e2e run build
+        run: |
+          pnpm --filter=@milkdown/prose run build
+          pnpm --filter=@milkdown/e2e run build
 
       - name: Install browsers
         run: pnpm --filter=@milkdown/e2e test:install
@@ -99,7 +118,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results-e2e-${{ matrix.shard }}
-          path: e2e/playwright-report/
+          path: e2e/test-results/
           retention-days: 7
 
   summary:

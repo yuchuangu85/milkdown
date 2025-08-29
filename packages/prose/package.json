@@ -1,7 +1,7 @@
 {
   "name": "@milkdown/prose",
   "type": "module",
-  "version": "7.9.0",
+  "version": "7.15.5",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -52,9 +52,9 @@
     "./tables": {
       "import": "./src/tables.ts"
     },
-    "./view/style/prosemirror.css": "./node_modules/prosemirror-view/style/prosemirror.css",
-    "./tables/style/tables.css": "./node_modules/prosemirror-tables/style/tables.css",
-    "./gapcursor/style/gapcursor.css": "./node_modules/prosemirror-gapcursor/style/gapcursor.css"
+    "./view/style/prosemirror.css": "./lib/style/prosemirror.css",
+    "./tables/style/tables.css": "./lib/style/tables.css",
+    "./gapcursor/style/gapcursor.css": "./lib/style/gapcursor.css"
   },
   "main": "./src/index.ts",
   "publishConfig": {
@@ -184,7 +184,7 @@
     "prosemirror-model": "^1.24.1",
     "prosemirror-schema-list": "^1.5.0",
     "prosemirror-state": "^1.4.3",
-    "prosemirror-tables": "^1.7.0",
+    "prosemirror-tables": "^1.8.1",
     "prosemirror-transform": "^1.10.2",
     "prosemirror-view": "^1.37.1",
     "tslib": "^2.8.1"

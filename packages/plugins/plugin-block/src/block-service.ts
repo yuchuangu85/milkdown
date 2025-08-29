@@ -5,13 +5,12 @@ import type { EditorView } from '@milkdown/prose/view'
 import { editorViewCtx } from '@milkdown/core'
 import { browser } from '@milkdown/prose'
 import { NodeSelection } from '@milkdown/prose/state'
-import throttle from 'lodash.throttle'
+import { throttle } from 'lodash-es'
 
 import type { FilterNodes } from './block-config'
 import type { ActiveNode } from './types'
 
 import { selectRootNodeByDom } from './__internal__/select-node-by-dom'
-import { serializeForClipboard } from './__internal__/serialize-for-clipboard'
 import { blockConfig } from './block-config'
 
 const brokenClipboardAPI =
@@ -71,7 +70,11 @@ export class BlockService {
 
   /// @internal
   get #filterNodes(): FilterNodes | undefined {
-    return this.#ctx?.get(blockConfig.key).filterNodes
+    try {
+      return this.#ctx?.get(blockConfig.key).filterNodes
+    } catch {
+      return undefined
+    }
   }
 
   /// @internal
@@ -151,7 +154,7 @@ export class BlockService {
     if (event.dataTransfer && selection) {
       const slice = selection.content()
       event.dataTransfer.effectAllowed = 'copyMove'
-      const { dom, text } = serializeForClipboard(view, slice)
+      const { dom, text } = view.serializeForClipboard(slice)
       event.dataTransfer.clearData()
       event.dataTransfer.setData(
         brokenClipboardAPI ? 'Text' : 'text/html',

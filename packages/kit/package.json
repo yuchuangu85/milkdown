@@ -1,7 +1,7 @@
 {
   "name": "@milkdown/kit",
   "type": "module",
-  "version": "7.9.0",
+  "version": "7.15.5",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -344,7 +344,7 @@
     "src"
   ],
   "scripts": {
-    "build": "postcss 'src' --base 'src' --dir 'lib'"
+    "build": "postcss src --base src --dir lib"
   },
   "dependencies": {
     "@milkdown/components": "workspace:*",

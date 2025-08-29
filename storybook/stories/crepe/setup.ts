@@ -43,43 +43,75 @@ export function setup({ args, style, theme }: setupConfig) {
           language === 'JA' ? 'リンクを貼り付け...' : 'Paste link...',
       },
       [Crepe.Feature.ImageBlock]: {
-        inlineUploadButton: () =>
-          language === 'JA' ? 'アップロード' : 'Upload',
+        inlineUploadButton: language === 'JA' ? 'アップロード' : 'Upload',
         inlineUploadPlaceholderText:
           language === 'JA' ? 'またはリンクを貼り付ける' : 'or paste link',
-        blockUploadButton: () =>
+        blockUploadButton:
           language === 'JA' ? 'ファイルをアップロード' : 'Upload file',
         blockUploadPlaceholderText:
           language === 'JA' ? 'またはリンクを貼り付ける' : 'or paste link',
         blockCaptionPlaceholderText:
           language === 'JA' ? '画像の説明を書く...' : 'Write Image Caption',
-        blockConfirmButton: () => (language === 'JA' ? '確認' : 'Confirm'),
+        blockConfirmButton: language === 'JA' ? '確認' : 'Confirm',
       },
       [Crepe.Feature.BlockEdit]: {
-        slashMenuTextGroupLabel: language === 'JA' ? 'テキスト' : 'Text',
-        slashMenuTextLabel: language === 'JA' ? 'テキスト' : 'Text',
-        slashMenuH1Label: language === 'JA' ? '見出し1' : 'Heading 1',
-        slashMenuH2Label: language === 'JA' ? '見出し2' : 'Heading 2',
-        slashMenuH3Label: language === 'JA' ? '見出し3' : 'Heading 3',
-        slashMenuH4Label: language === 'JA' ? '見出し4' : 'Heading 4',
-        slashMenuH5Label: language === 'JA' ? '見出し5' : 'Heading 5',
-        slashMenuH6Label: language === 'JA' ? '見出し6' : 'Heading 6',
-        slashMenuQuoteLabel: language === 'JA' ? '引用' : 'Quote',
-        slashMenuDividerLabel: language === 'JA' ? '区切り線' : 'Divider',
-
-        slashMenuListGroupLabel: language === 'JA' ? 'リスト' : 'List',
-        slashMenuBulletListLabel:
-          language === 'JA' ? '箇条書き' : 'Bullet List',
-        slashMenuOrderedListLabel:
-          language === 'JA' ? '番号付きリスト' : 'Ordered List',
-        slashMenuTaskListLabel:
-          language === 'JA' ? 'タスクリスト' : 'Task List',
-
-        slashMenuAdvancedGroupLabel:
-          language === 'JA' ? '高度な機能' : 'Advanced',
-        slashMenuImageLabel: language === 'JA' ? '画像' : 'Image',
-        slashMenuCodeBlockLabel: language === 'JA' ? 'コード' : 'Code',
-        slashMenuTableLabel: language === 'JA' ? '表' : 'Table',
+        textGroup: {
+          label: language === 'JA' ? 'テキスト' : 'Text',
+          text: {
+            label: language === 'JA' ? 'テキスト' : 'Text',
+          },
+          h1: {
+            label: language === 'JA' ? '見出し1' : 'Heading 1',
+          },
+          h2: {
+            label: language === 'JA' ? '見出し2' : 'Heading 2',
+          },
+          h3: {
+            label: language === 'JA' ? '見出し3' : 'Heading 3',
+          },
+          h4: {
+            label: language === 'JA' ? '見出し4' : 'Heading 4',
+          },
+          h5: {
+            label: language === 'JA' ? '見出し5' : 'Heading 5',
+          },
+          h6: {
+            label: language === 'JA' ? '見出し6' : 'Heading 6',
+          },
+          quote: {
+            label: language === 'JA' ? '引用' : 'Quote',
+          },
+          divider: {
+            label: language === 'JA' ? '区切り線' : 'Divider',
+          },
+        },
+        listGroup: {
+          label: language === 'JA' ? 'リスト' : 'List',
+          bulletList: {
+            label: language === 'JA' ? '箇条書き' : 'Bullet List',
+          },
+          orderedList: {
+            label: language === 'JA' ? '番号付きリスト' : 'Ordered List',
+          },
+          taskList: {
+            label: language === 'JA' ? 'タスクリスト' : 'Task List',
+          },
+        },
+        advancedGroup: {
+          label: language === 'JA' ? '高度な機能' : 'Advanced',
+          image: {
+            label: language === 'JA' ? '画像' : 'Image',
+          },
+          codeBlock: {
+            label: language === 'JA' ? 'コード' : 'Code',
+          },
+          table: {
+            label: language === 'JA' ? '表' : 'Table',
+          },
+          math: {
+            label: language === 'JA' ? '数式' : 'Math',
+          },
+        },
       },
       [Crepe.Feature.Placeholder]: {
         text:
@@ -91,7 +123,7 @@ export function setup({ args, style, theme }: setupConfig) {
         theme,
         searchPlaceholder: language === 'JA' ? '言語を検索' : 'Search language',
         noResultText: language === 'JA' ? '見つかりません' : 'No result',
-        previewLabel: () => (language === 'JA' ? 'プレビュー' : 'Preview'),
+        previewLabel: language === 'JA' ? 'プレビュー' : 'Preview',
         previewToggleText: (previewOnlyMode) =>
           language === 'JA'
             ? previewOnlyMode

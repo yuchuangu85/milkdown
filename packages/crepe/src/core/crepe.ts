@@ -1,47 +1,38 @@
-import type { DefaultValue } from '@milkdown/kit/core'
-import type { ListenerManager } from '@milkdown/kit/plugin/listener'
-
-import {
-  Editor,
-  EditorStatus,
-  defaultValueCtx,
-  editorViewOptionsCtx,
-  rootCtx,
-} from '@milkdown/kit/core'
-import { clipboard } from '@milkdown/kit/plugin/clipboard'
-import { history } from '@milkdown/kit/plugin/history'
-import { indent, indentConfig } from '@milkdown/kit/plugin/indent'
-import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
-import { trailing } from '@milkdown/kit/plugin/trailing'
-import { commonmark } from '@milkdown/kit/preset/commonmark'
-import { gfm } from '@milkdown/kit/preset/gfm'
-import { getMarkdown } from '@milkdown/kit/utils'
+import { defaultsDeep } from 'lodash-es'
 
 import type { CrepeFeatureConfig } from '../feature'
 
-import { CrepeFeature, defaultFeatures, loadFeature } from '../feature'
-import { configureFeatures, crepeCtx } from './slice'
+import { defaultConfig } from '../default-config'
+import { CrepeFeature, defaultFeatures } from '../feature'
+import { loadFeature } from '../feature/loader'
+import { CrepeBuilder, type CrepeBuilderConfig } from './builder'
 
-export interface CrepeConfig {
+/// The crepe editor configuration.
+export interface CrepeConfig extends CrepeBuilderConfig {
+  /// Enable/disable specific features.
   features?: Partial<Record<CrepeFeature, boolean>>
+
+  /// Configure individual features.
   featureConfigs?: CrepeFeatureConfig
-  root?: Node | string | null
-  defaultValue?: DefaultValue
 }
 
-export class Crepe {
+/// The crepe editor class.
+export class Crepe extends CrepeBuilder {
+  /// This is an alias for the `CrepeFeature` enum.
   static Feature = CrepeFeature
-  readonly #editor: Editor
-  readonly #initPromise: Promise<unknown>
-  readonly #rootElement: Node
-  #editable = true
 
+  /// The constructor of the crepe editor.
+  /// You can pass configs to the editor to configure the editor.
+  /// Calling the constructor will not create the editor, you need to call `create` to create the editor.
   constructor({
-    root,
     features = {},
     featureConfigs = {},
-    defaultValue = '',
-  }: CrepeConfig) {
+    ...crepeBuilderConfig
+  }: CrepeConfig = {}) {
+    super(crepeBuilderConfig)
+
+    const finalConfigs = defaultsDeep(featureConfigs, defaultConfig)
+
     const enabledFeatures = Object.entries({
       ...defaultFeatures,
       ...features,
@@ -49,80 +40,11 @@ export class Crepe {
       .filter(([, enabled]) => enabled)
       .map(([feature]) => feature as CrepeFeature)
 
-    this.#rootElement =
-      (typeof root === 'string' ? document.querySelector(root) : root) ??
-      document.body
-    this.#editor = Editor.make()
-      .config((ctx) => {
-        ctx.inject(crepeCtx, this)
-      })
-      .config(configureFeatures(enabledFeatures))
-      .config((ctx) => {
-        ctx.set(rootCtx, this.#rootElement)
-        ctx.set(defaultValueCtx, defaultValue)
-        ctx.set(editorViewOptionsCtx, {
-          editable: () => this.#editable,
-        })
-        ctx.update(indentConfig.key, (value) => ({
-          ...value,
-          size: 4,
-        }))
-      })
-      .use(commonmark)
-      .use(listener)
-      .use(history)
-      .use(indent)
-      .use(trailing)
-      .use(clipboard)
-      .use(gfm)
-
-    const promiseList: Promise<unknown>[] = []
-
     enabledFeatures.forEach((feature) => {
-      const config = (featureConfigs as Partial<Record<CrepeFeature, never>>)[
+      const config = (finalConfigs as Partial<Record<CrepeFeature, never>>)[
         feature
       ]
-      promiseList.push(loadFeature(feature, this.#editor, config))
+      loadFeature(feature, this.editor, config)
     })
-
-    this.#initPromise = Promise.all(promiseList)
-  }
-
-  create = async () => {
-    await this.#initPromise
-    return this.#editor.create()
-  }
-
-  destroy = async () => {
-    await this.#initPromise
-    return this.#editor.destroy()
-  }
-
-  get editor(): Editor {
-    return this.#editor
-  }
-
-  setReadonly = (value: boolean) => {
-    this.#editable = !value
-    return this
-  }
-
-  getMarkdown = () => {
-    return this.#editor.action(getMarkdown())
-  }
-
-  on = (fn: (api: ListenerManager) => void) => {
-    if (this.#editor.status !== EditorStatus.Created) {
-      this.#editor.config((ctx) => {
-        const listener = ctx.get(listenerCtx)
-        fn(listener)
-      })
-      return this
-    }
-    this.#editor.action((ctx) => {
-      const listener = ctx.get(listenerCtx)
-      fn(listener)
-    })
-    return this
   }
 }

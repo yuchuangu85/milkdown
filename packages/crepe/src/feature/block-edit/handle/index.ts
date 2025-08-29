@@ -2,7 +2,12 @@ import type { Ctx } from '@milkdown/kit/ctx'
 import type { PluginView } from '@milkdown/kit/prose/state'
 
 import { editorViewCtx } from '@milkdown/kit/core'
-import { BlockProvider, block, blockConfig } from '@milkdown/kit/plugin/block'
+import {
+  BlockProvider,
+  block,
+  blockConfig,
+  type BlockProviderOptions,
+} from '@milkdown/kit/plugin/block'
 import { paragraphSchema } from '@milkdown/kit/preset/commonmark'
 import { findParent } from '@milkdown/kit/prose'
 import { TextSelection } from '@milkdown/kit/prose/state'
@@ -26,12 +31,13 @@ export class BlockHandleView implements PluginView {
     content.classList.add('milkdown-block-handle')
     const app = createApp(BlockHandle, {
       onAdd: this.onAdd,
-      addIcon: config?.handleAddIcon ?? (() => plusIcon),
-      handleIcon: config?.handleDragIcon ?? (() => menuIcon),
+      addIcon: config?.handleAddIcon ?? plusIcon,
+      handleIcon: config?.handleDragIcon ?? menuIcon,
     })
     app.mount(content)
     this.#app = app
     this.#content = content
+    const blockProviderOptions = config?.blockHandle ?? {}
     this.#provider = new BlockProvider({
       ctx,
       content,
@@ -55,6 +61,7 @@ export class BlockHandleView implements PluginView {
           ? 'left-start'
           : 'left'
       },
+      ...(blockProviderOptions as Partial<BlockProviderOptions>),
     })
     this.update()
   }

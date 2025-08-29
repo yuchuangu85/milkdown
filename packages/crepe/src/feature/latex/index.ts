@@ -3,12 +3,13 @@ import type { KatexOptions } from 'katex'
 import { codeBlockConfig } from '@milkdown/kit/component/code-block'
 import katex from 'katex'
 
-import type { DefineFeature, Icon } from '../shared'
+import type { DefineFeature } from '../shared'
 
-import { CrepeFeature } from '../..'
-import { FeaturesCtx } from '../../core/slice'
+import { crepeFeatureConfig, useCrepeFeatures } from '../../core/slice'
+import { CrepeFeature } from '../../feature'
 import { confirmIcon } from '../../icons'
 import { blockLatexSchema } from './block-latex'
+import { toggleLatexCommand } from './command'
 import { mathInlineSchema } from './inline-latex'
 import { inlineLatexTooltip } from './inline-tooltip/tooltip'
 import { LatexInlineTooltip } from './inline-tooltip/view'
@@ -17,18 +18,16 @@ import { remarkMathBlockPlugin, remarkMathPlugin } from './remark'
 
 export interface LatexConfig {
   katexOptions: KatexOptions
-  inlineEditConfirm: Icon
+  inlineEditConfirm: string
 }
 
 export type LatexFeatureConfig = Partial<LatexConfig>
 
-export const defineFeature: DefineFeature<LatexFeatureConfig> = (
-  editor,
-  config
-) => {
+export const latex: DefineFeature<LatexFeatureConfig> = (editor, config) => {
   editor
+    .config(crepeFeatureConfig(CrepeFeature.Latex))
     .config((ctx) => {
-      const flags = ctx.get(FeaturesCtx)
+      const flags = useCrepeFeatures(ctx).get()
       const isCodeMirrorEnabled = flags.includes(CrepeFeature.CodeMirror)
       if (!isCodeMirrorEnabled) {
         throw new Error('You need to enable CodeMirror to use LaTeX feature')
@@ -48,7 +47,7 @@ export const defineFeature: DefineFeature<LatexFeatureConfig> = (
       ctx.set(inlineLatexTooltip.key, {
         view: (view) => {
           return new LatexInlineTooltip(ctx, view, {
-            inlineEditConfirm: config?.inlineEditConfirm ?? (() => confirmIcon),
+            inlineEditConfirm: config?.inlineEditConfirm ?? confirmIcon,
             ...config,
           })
         },
@@ -61,6 +60,7 @@ export const defineFeature: DefineFeature<LatexFeatureConfig> = (
     .use(mathInlineInputRule)
     .use(mathBlockInputRule)
     .use(blockLatexSchema)
+    .use(toggleLatexCommand)
 }
 
 function renderLatex(content: string, options?: KatexOptions) {

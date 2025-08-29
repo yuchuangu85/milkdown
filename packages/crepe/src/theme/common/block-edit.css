@@ -39,6 +39,7 @@
       display: none;
     }
     position: absolute;
+    z-index: 10;
     display: block;
     font-family: var(--crepe-font-default);
     color: var(--crepe-color-on-surface);
@@ -117,7 +118,7 @@
             background: var(--crepe-color-selected);
           }
 
-          & > svg {
+          svg {
             width: 24px;
             height: 24px;
             color: var(--crepe-color-outline);

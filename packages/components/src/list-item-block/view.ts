@@ -2,6 +2,7 @@ import type { Node } from '@milkdown/prose/model'
 import type { NodeViewConstructor } from '@milkdown/prose/view'
 
 import { listItemSchema } from '@milkdown/preset-commonmark'
+import { TextSelection } from '@milkdown/prose/state'
 import { $view } from '@milkdown/utils'
 import { createApp, ref, watchEffect } from 'vue'
 
@@ -27,8 +28,12 @@ export const listItemBlockView = $view(
       const config = ctx.get(listItemBlockConfig.key)
       const selected = ref(false)
       const setAttr = (attr: string, value: unknown) => {
+        if (!view.editable) return
         const pos = getPos()
         if (pos == null) return
+
+        if (!view.hasFocus()) view.focus()
+
         view.dispatch(view.state.tr.setNodeAttribute(pos, attr, value))
       }
       const disposeSelectedWatcher = watchEffect(() => {
@@ -39,8 +44,19 @@ export const listItemBlockView = $view(
           dom.classList.remove('selected')
         }
       })
+      let raf = 0
       const onMount = (div: HTMLElement) => {
+        const { anchor, head } = view.state.selection
         div.appendChild(contentDOM)
+        // put the cursor to the new created list item
+        const anchorPos = view.state.doc.resolve(anchor)
+        const headPos = view.state.doc.resolve(head)
+        raf = requestAnimationFrame(() => {
+          cancelAnimationFrame(raf)
+          if (!anchorPos.doc.eq(view.state.doc)) return
+          const selection = new TextSelection(anchorPos, headPos)
+          view.dispatch(view.state.tr.setSelection(selection))
+        })
       }
 
       const app = createApp(ListItem, {

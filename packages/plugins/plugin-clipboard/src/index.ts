@@ -1,4 +1,4 @@
-import type { Node, Slice } from '@milkdown/prose/model'
+import type { Node as ProsemirrorNode } from '@milkdown/prose/model'
 
 import {
   editorViewOptionsCtx,
@@ -6,7 +6,7 @@ import {
   schemaCtx,
   serializerCtx,
 } from '@milkdown/core'
-import { getNodeFromSchema } from '@milkdown/prose'
+import { getNodeFromSchema, isTextOnlySlice } from '@milkdown/prose'
 import { DOMParser, DOMSerializer } from '@milkdown/prose/model'
 import { Plugin, PluginKey, TextSelection } from '@milkdown/prose/state'
 import { $prose } from '@milkdown/utils'
@@ -25,20 +25,6 @@ function isPureText(
   if (child) return isPureText(child as UnknownRecord[])
 
   return content.type === 'text'
-}
-
-function isTextOnlySlice(slice: Slice): Node | false {
-  if (slice.content.childCount === 1) {
-    const node = slice.content.firstChild
-    if (node?.type.name === 'text' && node.marks.length === 0) return node
-
-    if (node?.type.name === 'paragraph' && node.childCount === 1) {
-      const _node = node.firstChild
-      if (_node?.type.name === 'text' && _node.marks.length === 0) return _node
-    }
-  }
-
-  return false
 }
 
 /// The prosemirror plugin for clipboard.
@@ -92,7 +78,7 @@ export const clipboard = $prose((ctx) => {
         if (html.length === 0 && text.length === 0) return false
 
         const domParser = DOMParser.fromSchema(schema)
-        let dom
+        let dom: Node
         if (html.length === 0) {
           const slice = parser(text)
           if (!slice || typeof slice === 'string') return false
@@ -121,7 +107,7 @@ export const clipboard = $prose((ctx) => {
         const serializer = ctx.get(serializerCtx)
         const isText = isPureText(slice.content.toJSON())
         if (isText)
-          return (slice.content as unknown as Node).textBetween(
+          return (slice.content as unknown as ProsemirrorNode).textBetween(
             0,
             slice.content.size,
             '\n\n'
